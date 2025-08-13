@@ -9,7 +9,7 @@
     ?>
     <title>Edit Dokumen - <?=htmlspecialchars($siteSettings['site_name'])?></title>
     <link rel="icon" href="<?=htmlspecialchars($siteSettings['site_favicon'])?>">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="/css/style.css" rel="stylesheet">
     <!-- EasyMDE CSS -->
     <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
 </head>
@@ -35,8 +35,27 @@
         <div class="flex-1 overflow-hidden">
             <div class="p-8">
                 <div class="mb-6">
-                    <h1 class="text-2xl font-bold text-gray-900">Tulis Post Baru</h1>
+                    <h1 class="text-2xl font-bold text-gray-900">Edit Post</h1>
                     <p class="text-gray-600">Edit dokumen dan artikel yang sudah ada</p>
+                </div>
+
+                <!-- Multi-user editing warning -->
+                <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-yellow-800">
+                                Multi-user Notice
+                            </h3>
+                            <div class="mt-2 text-sm text-yellow-700">
+                                <p>Autosave is disabled to prevent conflicts when multiple admins are editing. Please save your work regularly.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <form id="postForm" method="post" action="/admin/posts/<?= $post['id'] ?>" enctype="multipart/form-data" novalidate class="space-y-6">
@@ -228,14 +247,28 @@ document.addEventListener('DOMContentLoaded', function() {
                   .replace(/^-+|-+$/g, '');
     }
 
+    // Clear any existing EasyMDE autosave cache to prevent conflicts
+    if (typeof Storage !== "undefined") {
+        // Clear old autosave data that might cause conflicts
+        Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('easymde') || key.includes('post_content')) {
+                localStorage.removeItem(key);
+            }
+        });
+        // Also clear session storage
+        Object.keys(sessionStorage).forEach(key => {
+            if (key.startsWith('easymde') || key.includes('post_content')) {
+                sessionStorage.removeItem(key);
+            }
+        });
+    }
+
     // Initialize EasyMDE
     const easyMDE = new EasyMDE({
         element: document.getElementById('content_md'),
         spellChecker: false,
         autosave: {
-            enabled: true,
-            uniqueId: 'post_content',
-            delay: 1000,
+            enabled: false, // Disabled to prevent cache conflicts with multiple users
         },
         uploadImage: true,
         imageUploadEndpoint: '/upload-image.php',
@@ -462,6 +495,77 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial counters (set to actual values for edit mode)
     titleCount.textContent = `${title.value.length}/255`;
     excerptCount.textContent = `${excerpt.value.length}/500`;
+
+    // Add manual save reminder and cache cleanup
+    let lastSaveTime = Date.now();
+    let hasUnsavedChanges = false;
+
+    // Track content changes
+    easyMDE.codemirror.on('change', function() {
+        hasUnsavedChanges = true;
+        const now = Date.now();
+        // Show save reminder every 2 minutes if there are unsaved changes
+        if (now - lastSaveTime > 120000) {
+            showSaveReminder();
+            lastSaveTime = now;
+        }
+    });
+
+    // Also track form input changes
+    document.getElementById('postForm').addEventListener('input', function() {
+        hasUnsavedChanges = true;
+    });
+
+    // Reset flag when form is submitted
+    document.getElementById('postForm').addEventListener('submit', function() {
+        hasUnsavedChanges = false;
+        lastSaveTime = Date.now();
+    });
+
+    // Warn before leaving if there are unsaved changes
+    window.addEventListener('beforeunload', function(e) {
+        // Clear any EasyMDE cache before leaving
+        if (typeof Storage !== "undefined") {
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('easymde') || key.includes('post_content')) {
+                    localStorage.removeItem(key);
+                }
+            });
+            Object.keys(sessionStorage).forEach(key => {
+                if (key.startsWith('easymde') || key.includes('post_content')) {
+                    sessionStorage.removeItem(key);
+                }
+            });
+        }
+
+        if (hasUnsavedChanges) {
+            e.preventDefault();
+            e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+            return e.returnValue;
+        }
+    });
+
+    function showSaveReminder() {
+        // Create a subtle notification
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
+        notification.innerHTML = `
+            <div class="flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Don't forget to save your work!
+            </div>
+        `;
+        document.body.appendChild(notification);
+
+        // Remove notification after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 5000);
+    }
 });
 </script>
 </body>

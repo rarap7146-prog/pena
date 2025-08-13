@@ -66,7 +66,7 @@ class PerformanceController
         
         // Simple auth check - only for admin
         session_start();
-        if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+        if (empty($_SESSION['is_admin'])) {
             http_response_code(403);
             echo json_encode(['error' => 'Unauthorized']);
             exit;

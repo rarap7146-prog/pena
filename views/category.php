@@ -27,7 +27,7 @@
     <link rel="canonical" href="<?=htmlspecialchars($siteSettings['site_url'] ?? 'https://' . $_SERVER['HTTP_HOST'])?>/category/<?= htmlspecialchars($category['slug']) ?>">
     
     <link rel="icon" href="<?=htmlspecialchars($siteSettings['site_favicon'])?>">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="/css/style.css" rel="stylesheet">
     
     <!-- JSON-LD Schema Markup -->
     <?php

@@ -40,7 +40,7 @@
     <link rel="canonical" href="<?=htmlspecialchars($siteSettings['site_url'] ?? 'https://' . $_SERVER['HTTP_HOST'])?>/post/<?=htmlspecialchars($post['slug'])?>">
     
     <link rel="icon" href="<?=htmlspecialchars($siteSettings['site_favicon'])?>">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="/css/style.css" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
@@ -374,7 +374,7 @@
                             <div>
                                 <a href="/download/<?=htmlspecialchars($f['filename'])?>" 
                                    target="_blank"
-                                   class="download-link inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors">
+                                   class="download-link inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors" style="word-break:break-word">
                                     <?=htmlspecialchars($f['filename'])?>
                                 </a>
                             </div>

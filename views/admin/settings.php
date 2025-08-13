@@ -9,7 +9,7 @@
     ?>
     <title>Pengaturan - <?=htmlspecialchars($siteSettings['site_name'])?></title>
     <link rel="icon" href="<?=htmlspecialchars($siteSettings['site_favicon'])?>">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="/css/style.css" rel="stylesheet">
 </head>
 <body class="bg-gray-50">
     <?php

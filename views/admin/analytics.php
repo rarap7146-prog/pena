@@ -13,7 +13,7 @@
     
     include __DIR__ . '/../partials/meta-tags.php';
     ?>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="/css/style.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-50">

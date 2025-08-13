@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="id">
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php 
     // Start session first before any output
     if (session_status() !== PHP_SESSION_ACTIVE) {
@@ -37,7 +39,7 @@
     $organizationSchema = generateOrganizationSchema($siteSettings);
     outputJsonLdSchema($organizationSchema);
     ?>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="/css/style.css" rel="stylesheet">
 </head>
 <body class="bg-gray-50 font-sans">
     <div class="max-w-2xl mx-auto px-5 py-8">
