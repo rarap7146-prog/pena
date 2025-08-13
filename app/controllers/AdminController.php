@@ -285,7 +285,11 @@ class AdminController
     $settings = [
       'site_name' => trim($_POST['site_name'] ?? ''),
       'site_description' => trim($_POST['site_description'] ?? ''),
-      'site_favicon' => '/favicon.ico' // default
+      'site_favicon' => '/favicon.ico', // default
+      'home' => [
+        'title' => trim($_POST['home_title'] ?? ''),
+        'meta_description' => trim($_POST['home_meta_description'] ?? '')
+      ]
     ];
 
     // Handle favicon upload
@@ -336,8 +340,17 @@ class AdminController
       }
     }
 
+    // Load existing settings to preserve analytics data
     $configFile = __DIR__ . '/../../config/site.json';
-    if (!file_put_contents($configFile, json_encode($settings, JSON_PRETTY_PRINT))) {
+    $existingSettings = [];
+    if (file_exists($configFile)) {
+      $existingSettings = json_decode(file_get_contents($configFile), true) ?? [];
+    }
+    
+    // Merge with existing settings to preserve analytics
+    $finalSettings = array_merge($existingSettings, $settings);
+
+    if (!file_put_contents($configFile, json_encode($finalSettings, JSON_PRETTY_PRINT))) {
       http_response_code(500);
       exit('Failed to save settings');
     }
@@ -346,10 +359,54 @@ class AdminController
     exit;
   }
 
-  public function editPost(): void {
+  public function analytics(): void {
+    AuthController::requireAdmin();
+    $this->view('admin/analytics');
+  }
+
+  public function updateAnalytics(): void {
     AuthController::requireAdmin();
     
-    $id = $_GET['id'] ?? null;
+    if (!$this->csrf()) {
+      http_response_code(403);
+      exit('CSRF token mismatch');
+    }
+
+    // Load current settings
+    $configFile = __DIR__ . '/../../config/site.json';
+    $settings = json_decode(file_get_contents($configFile), true);
+    
+    // Update analytics settings
+    $settings['analytics'] = [
+      'ga4_measurement_id' => trim($_POST['ga4_measurement_id'] ?? ''),
+      'gtag_config' => [
+        'send_page_view' => true,
+        'anonymize_ip' => true,
+        'cookie_domain' => 'auto',
+        'cookie_expires' => 63072000
+      ],
+      'google_search_console_verification' => trim($_POST['google_search_console_verification'] ?? ''),
+      'enable_performance_monitoring' => isset($_POST['enable_performance_monitoring'])
+    ];
+
+    // Save settings
+    if (!file_put_contents($configFile, json_encode($settings, JSON_PRETTY_PRINT))) {
+      http_response_code(500);
+      exit('Failed to save analytics settings');
+    }
+
+    header('Location: /admin/analytics?saved=1');
+    exit;
+  }
+
+  public function editPost(int $id = null): void {
+    AuthController::requireAdmin();
+    
+    // Get ID from parameter or GET
+    if ($id === null) {
+      $id = $_GET['id'] ?? null;
+    }
+    
     if (!$id) {
       http_response_code(404);
       exit('Post not found');
@@ -376,11 +433,15 @@ class AdminController
     $this->view('admin/posts/edit', compact('post', 'categories', 'csrf'));
   }
 
-  public function updatePost(): void {
+  public function updatePost(int $id = null): void {
     AuthController::requireAdmin();
     $this->csrf();
 
-    $id = $_POST['id'] ?? null;
+    // Get ID from parameter or POST
+    if ($id === null) {
+      $id = $_POST['id'] ?? null;
+    }
+    
     if (!$id) {
       http_response_code(404);
       exit('Post not found');

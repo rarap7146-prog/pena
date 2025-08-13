@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://araska.id/sitemap.xml
+
+# Block admin areas
+Disallow: /admin/
+Disallow: /storage/
+Disallow: /config/
+Disallow: /vendor/
+
+# Allow important directories
+Allow: /public/css/
+Allow: /public/uploads/content/
+Allow: /uploads/content/
+
+# Crawl delay (optional, 1 second)
+Crawl-delay: 1

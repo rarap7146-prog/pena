@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php 
-    require_once __DIR__ . '/../../../app/helpers/site.php';
+    require_once __DIR__ . '/../../app/helpers/site.php';
     $siteSettings = getSiteSettings();
     ?>
     <title>Kelola Post - <?=htmlspecialchars($siteSettings['site_name'])?></title>
@@ -26,7 +26,7 @@
                 <p class="text-sm text-gray-600">Admin Panel</p>
             </div>
             
-            <?php include __DIR__ . '/../partials/navigation.php'; ?>
+            <?php include __DIR__ . '/partials/navigation.php'; ?>
         </div>
 
         <!-- Main Content -->
@@ -37,7 +37,7 @@
                         <h1 class="text-2xl font-bold text-gray-900">Kelola Post</h1>
                         <p class="text-gray-600">Daftar semua dokumen dan artikel</p>
                     </div>
-                    <a href="/admin/post/new" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out">
+                    <a href="/admin/new" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out">
                         Tulis Post Baru
                     </a>
                 </div>
@@ -106,20 +106,14 @@
                                         <div class="text-sm text-gray-500"><?=date('H:i', strtotime($post['created_at']))?></div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center space-x-2">
-                                            <a href="/admin/posts/<?= (int)$post['id'] ?>/edit" 
-                                               class="px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100">
-                                                Edit
-                                            </a>
-                                            <form method="post" action="/admin/post/delete" class="inline" 
-                                                  onsubmit="return confirm('Hapus dokumen ini? Tindakan tidak bisa dibatalkan.');">
-                                                <input type="hidden" name="csrf" value="<?=htmlspecialchars($csrf)?>">
-                                                <input type="hidden" name="id" value="<?= (int)$post['id'] ?>">
-                                                <button type="submit" class="px-3 py-1 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100">
-                                                    Hapus
-                                                </button>
-                                            </form>
-                                        </div>
+                                        <form method="post" action="/admin/post/delete" class="inline" 
+                                              onsubmit="return confirm('Hapus dokumen ini? Tindakan tidak bisa dibatalkan.');">
+                                            <input type="hidden" name="csrf" value="<?=htmlspecialchars($csrf)?>">
+                                            <input type="hidden" name="id" value="<?= (int)$post['id'] ?>">
+                                            <button type="submit" class="px-3 py-1 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100">
+                                                Hapus
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

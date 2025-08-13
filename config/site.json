@@ -1,5 +1,20 @@
 {
     "site_name": "Araska.id",
     "site_description": "Dokumen dan informasi terkini.",
-    "site_favicon": "\/uploads\/favicons\/favicon_1755070774.png"
+    "site_favicon": "\/uploads\/favicons\/favicon_1755081561.png",
+    "home": {
+        "title": "Araska.id | Template & Contoh Dokumen untuk Pelajar dan Profesional",
+        "meta_description": "Temukan dan unduh beragam template dokumen berkualitas tinggi di Araska.id. Dari tugas sekolah, contoh makalah, hingga template CV profesional, semua ada di sini."
+    },
+    "analytics": {
+        "ga4_measurement_id": "G-L11X8YTVKJ",
+        "gtag_config": {
+            "send_page_view": true,
+            "anonymize_ip": true,
+            "cookie_domain": "auto",
+            "cookie_expires": 63072000
+        },
+        "google_search_console_verification": "huls1qIwYNQWkB9fhb4HHF7_lF1ma7n3CAMf2mZa4Hw",
+        "enable_performance_monitoring": true
+    }
 }

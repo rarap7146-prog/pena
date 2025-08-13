@@ -1,0 +1,18 @@
+/* TEAM */
+Developer: Araska Development Team
+Contact: dev [at] araska.id
+From: Indonesia
+
+/* SITE */
+Last update: 2025/08/13
+Language: Indonesian
+Doctype: HTML5
+IDE: VS Code
+Standards: HTML5, CSS3, PHP 8+, MySQL
+Components: Tailwind CSS, EasyMDE, Composer
+Software: Nginx, PHP-FPM, MySQL
+
+/* THANKS */
+Framework: Tailwind CSS - https://tailwindcss.com
+Editor: EasyMDE - https://github.com/Ionaru/easy-markdown-editor
+PHP Libraries: Composer ecosystem

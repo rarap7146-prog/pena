@@ -28,6 +28,19 @@ if (preg_match('~^/category/([\w-]+)$~', $uri, $m) && $method === 'GET') {
   run('CategoryController', 'posts', $m[1]);
 }
 
+/* SEO Files */
+if ($uri === '/sitemap.xml' && $method === 'GET') {
+  run('SitemapController', 'xml');
+}
+
+/* API Endpoints */
+if ($uri === '/api/performance' && $method === 'POST') {
+  run('PerformanceController', 'logMetric');
+}
+if ($uri === '/api/performance' && $method === 'GET') {
+  run('PerformanceController', 'getMetrics');
+}
+
 /* Auth */
 if ($uri === '/login' && $method === 'GET') {
   run('AuthController', 'loginForm');
@@ -65,6 +78,12 @@ if ($uri === '/admin/settings' && $method === 'GET') {
 if ($uri === '/admin/settings' && $method === 'POST') {
   run('AdminController', 'updateSettings');
 }
+if ($uri === '/admin/analytics' && $method === 'GET') {
+  run('AdminController', 'analytics');
+}
+if ($uri === '/admin/analytics' && $method === 'POST') {
+  run('AdminController', 'updateAnalytics');
+}
 
 /* Categories */
 if ($uri === '/admin/categories' && $method === 'GET') {
@@ -90,6 +109,12 @@ if ($uri === '/admin/post/new' && $method === 'GET') {
 }
 if ($uri === '/admin/post' && $method === 'POST') {
   run('AdminController', 'store');
+}
+if (preg_match('~^/admin/posts/(\d+)/edit$~', $uri, $m) && $method === 'GET') {
+  run('AdminController', 'editPost', (int)$m[1]);
+}
+if (preg_match('~^/admin/posts/(\d+)$~', $uri, $m) && $method === 'POST') {
+  run('AdminController', 'updatePost', (int)$m[1]);
 }
 if ($uri === '/admin/post/delete' && $method === 'POST') {
     run('AdminController', 'delete');

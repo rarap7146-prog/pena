@@ -1,35 +1,42 @@
 <!doctype html>
-<html>
+<html lang="id">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php 
-    require_once __DIR__ . '/../app/helpers/site.php';
-    $siteSettings = getSiteSettings();
-    ?>
-    <title><?=htmlspecialchars($siteSettings['site_name'])?></title>
-    <meta name="description" content="<?=htmlspecialchars($siteSettings['site_description'])?>">
-    <link rel="icon" href="<?=htmlspecialchars($siteSettings['site_favicon'])?>">
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50 font-sans">
-    <?php
+    // Start session first before any output
     if (session_status() !== PHP_SESSION_ACTIVE) {
         session_start();
     }
+    
+    require_once __DIR__ . '/../app/helpers/site.php';
+    $siteSettings = getSiteSettings();
+    
+    // Use home-specific settings if available, otherwise fall back to site settings
+    $homeTitle = !empty($siteSettings['home']['title']) ? $siteSettings['home']['title'] : $siteSettings['site_name'];
+    $homeDescription = !empty($siteSettings['home']['meta_description']) ? $siteSettings['home']['meta_description'] : $siteSettings['site_description'];
+    
+    // Generate meta tags for homepage
+    $meta = generateMetaTags(
+        $homeTitle,
+        $homeDescription,
+        '/'
+    );
+    
+    include __DIR__ . '/partials/meta-tags.php';
     ?>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans">
     <div class="max-w-2xl mx-auto px-5 py-8">
-        <nav class="mb-8">
+                <nav class="mb-8">
             <div class="flex space-x-6">
                 <a href="/categories" class="text-gray-600 hover:text-gray-800 text-sm transition-colors">Kategori</a>
                 <?php if (!empty($_SESSION['is_admin'])): ?>
                     <a href="/admin" class="text-gray-600 hover:text-gray-800 text-sm transition-colors">Admin</a>
                 <?php endif; ?>
             </div>
-        </nav>
 
-        <h1 class="text-3xl font-bold text-gray-900 mb-8">Daftar Dokumen</h1>
-
+        <h1 class="text-3xl font-bold text-gray-900 mt-8"><?php echo $siteSettings['site_name']?></h1>
+        <span class="text-xl text-gray-900 mb-8"><?php echo $siteSettings['site_description']?></span>
         <div class="space-y-6">
         <?php foreach($posts as $p): ?>
             <article class="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
