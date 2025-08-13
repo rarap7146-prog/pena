@@ -20,6 +20,14 @@ if (preg_match('~^/post/([\w-]+)$~', $uri, $m) && $method === 'GET') {
   run('PostController', 'show', $m[1]);
 }
 
+if ($uri === '/categories' && $method === 'GET') {
+  run('CategoryController', 'listAll');
+}
+
+if (preg_match('~^/category/([\w-]+)$~', $uri, $m) && $method === 'GET') {
+  run('CategoryController', 'posts', $m[1]);
+}
+
 /* Auth */
 if ($uri === '/login' && $method === 'GET') {
   run('AuthController', 'loginForm');
@@ -47,6 +55,35 @@ if (preg_match('~^/download/(.+)$~', $uri, $m) && $method === 'GET') {
 /* Admin */
 if ($uri === '/admin' && $method === 'GET') {
   run('AdminController', 'dashboard');
+}
+if ($uri === '/admin/posts' && $method === 'GET') {
+  run('AdminController', 'posts');
+}
+if ($uri === '/admin/settings' && $method === 'GET') {
+  run('AdminController', 'settings');
+}
+if ($uri === '/admin/settings' && $method === 'POST') {
+  run('AdminController', 'updateSettings');
+}
+
+/* Categories */
+if ($uri === '/admin/categories' && $method === 'GET') {
+  run('CategoryController', 'index');
+}
+if ($uri === '/admin/categories/new' && $method === 'GET') {
+  run('CategoryController', 'create');
+}
+if ($uri === '/admin/categories' && $method === 'POST') {
+  run('CategoryController', 'store');
+}
+if (preg_match('~^/admin/categories/(\d+)/edit$~', $uri, $m) && $method === 'GET') {
+  run('CategoryController', 'edit', (int)$m[1]);
+}
+if (preg_match('~^/admin/categories/(\d+)$~', $uri, $m) && $method === 'POST') {
+  run('CategoryController', 'update', (int)$m[1]);
+}
+if (preg_match('~^/admin/categories/(\d+)/delete$~', $uri, $m) && $method === 'POST') {
+  run('CategoryController', 'delete', (int)$m[1]);
 }
 if ($uri === '/admin/post/new' && $method === 'GET') {
   run('AdminController', 'createForm');

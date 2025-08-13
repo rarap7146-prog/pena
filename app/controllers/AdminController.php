@@ -19,8 +19,7 @@ class AdminController
       $_SESSION['csrf'] = bin2hex(random_bytes(16));
       return $_SESSION['csrf'];
     }
-    $ok = isset($_POST['csrf']) && hash_equals($_SESSION['csrf'] ?? '', $_POST['csrf']);
-    if (!$ok) { http_response_code(403); exit('CSRF'); }
+    return isset($_POST['csrf']) && hash_equals($_SESSION['csrf'] ?? '', $_POST['csrf']);
   }
 
   private function slugify(string $text): string {
@@ -53,17 +52,31 @@ class AdminController
   public function dashboard(): void {
     AuthController::requireAdmin();
     $pdo = require __DIR__ . '/../db.php';
+    
+    // Get posts with category info
     $posts = $pdo->query(
-      "SELECT id,title,slug,created_at FROM posts ORDER BY created_at DESC"
+      "SELECT p.id, p.title, p.slug, p.created_at, c.name as category_name
+       FROM posts p 
+       LEFT JOIN categories c ON p.category_id = c.id 
+       ORDER BY p.created_at DESC"
     )->fetchAll();
+    
+    // Get categories count
+    $categories = $pdo->query("SELECT id, name FROM categories ORDER BY name")->fetchAll();
+    
     $csrf = $this->csrf();
-    $this->view('admin/dashboard', compact('posts','csrf'));
+    $this->view('admin/dashboard', compact('posts', 'categories', 'csrf'));
   }
 
   public function createForm(): void {
     AuthController::requireAdmin();
     $csrf = $this->csrf();
-    $this->view('admin/new', compact('csrf'));
+    
+    require_once __DIR__ . '/../models/Category.php';
+    $categoryModel = new Category();
+    $categories = $categoryModel->all();
+    
+    $this->view('admin/posts/create', compact('csrf', 'categories'));
   }
 
   public function store(): void {
@@ -72,21 +85,60 @@ class AdminController
 
     $pdo = require __DIR__ . '/../db.php';
 
-    $title   = trim($_POST['title']    ?? '');
-    $slugIn  = trim($_POST['slug']     ?? '');
-    $excerpt = trim($_POST['excerpt']  ?? '');
-    $content = trim($_POST['content_md'] ?? '');
+    $title           = trim($_POST['title'] ?? '');
+    $metaTitle       = trim($_POST['meta_title'] ?? $title);
+    $slugIn          = trim($_POST['slug'] ?? '');
+    $excerpt         = trim($_POST['excerpt'] ?? '');
+    $metaDescription = trim($_POST['meta_description'] ?? $excerpt);
+    $content         = trim($_POST['content_md'] ?? '');
+    $categoryId      = !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null;
+
+    // Validation
+    if (empty($title)) {
+      http_response_code(400);
+      exit('Title is required');
+    }
+    if (empty($content)) {
+      http_response_code(400);
+      exit('Content is required');
+    }
 
     // Slug base and uniqueness
     $baseSlug = $slugIn !== '' ? $this->slugify($slugIn) : $this->slugify($title);
     $slug     = $this->uniqueSlug($baseSlug, $pdo);
 
+    // Handle featured image upload
+    $featuredImage = null;
+    if (!empty($_FILES['featured_image']['name'])) {
+        $uploadedFile = $_FILES['featured_image'];
+        if ($uploadedFile['error'] === UPLOAD_ERR_OK) {
+            $ext = strtolower(pathinfo($uploadedFile['name'], PATHINFO_EXTENSION));
+            if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+                $newFilename = uniqid('img_') . '.' . $ext;
+                $destination = __DIR__ . '/../../public/uploads/featured-image/' . $newFilename;
+                
+                if (!is_dir(dirname($destination))) {
+                    mkdir(dirname($destination), 0755, true);
+                }
+                
+                if (move_uploaded_file($uploadedFile['tmp_name'], $destination)) {
+                    $featuredImage = $newFilename;
+                }
+            }
+        }
+    }
+
     // Insert post
     $stmt = $pdo->prepare(
-      "INSERT INTO posts (title,slug,excerpt,content_md,created_at)
-       VALUES (?,?,?,?,NOW())"
+      "INSERT INTO posts (
+        title, meta_title, slug, excerpt, meta_description, 
+        content_md, featured_image, category_id, created_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())"
     );
-    $stmt->execute([$title,$slug,$excerpt,$content]);
+    $stmt->execute([
+        $title, $metaTitle, $slug, $excerpt, $metaDescription,
+        $content, $featuredImage, $categoryId
+    ]);
     $postId = (int)$pdo->lastInsertId();
 
     // Optional file upload with debugging
@@ -182,6 +234,256 @@ class AdminController
     $del->execute([$id]);
 
     header('Location: /admin');
+    exit;
+  }
+
+  public function posts(): void {
+    AuthController::requireAdmin();
+    $pdo = require __DIR__ . '/../db.php';
+    
+    // Get posts with category info
+    $posts = $pdo->query(
+      "SELECT p.id, p.title, p.slug, p.created_at, p.excerpt, c.name as category_name
+       FROM posts p 
+       LEFT JOIN categories c ON p.category_id = c.id 
+       ORDER BY p.created_at DESC"
+    )->fetchAll();
+    
+    $csrf = $this->csrf();
+    $this->view('admin/posts/index', compact('posts', 'csrf'));
+  }
+
+  public function settings(): void {
+    AuthController::requireAdmin();
+    
+    // Get current settings (we'll create a simple config file approach)
+    $config = [];
+    $configFile = __DIR__ . '/../../config/site.json';
+    if (file_exists($configFile)) {
+      $config = json_decode(file_get_contents($configFile), true) ?? [];
+    }
+    
+    // Default values
+    $settings = array_merge([
+      'site_name' => 'Araska.id',
+      'site_description' => 'Dokumen dan informasi terkini',
+      'site_favicon' => '/favicon.ico'
+    ], $config);
+    
+    $csrf = $this->csrf();
+    $this->view('admin/settings', compact('settings', 'csrf'));
+  }
+
+  public function updateSettings(): void {
+    AuthController::requireAdmin();
+    
+    if (!$this->csrf()) {
+      http_response_code(403);
+      exit('CSRF token mismatch');
+    }
+
+    $settings = [
+      'site_name' => trim($_POST['site_name'] ?? ''),
+      'site_description' => trim($_POST['site_description'] ?? ''),
+      'site_favicon' => '/favicon.ico' // default
+    ];
+
+    // Handle favicon upload
+    if (isset($_FILES['site_favicon']) && $_FILES['site_favicon']['error'] === UPLOAD_ERR_OK) {
+      $uploadedFile = $_FILES['site_favicon'];
+      
+      // Validate file size (max 2MB)
+      if ($uploadedFile['size'] > 2 * 1024 * 1024) {
+        http_response_code(400);
+        exit('File favicon terlalu besar. Maksimal 2MB.');
+      }
+      
+      // Validate file type
+      $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/x-icon', 'image/vnd.microsoft.icon'];
+      $finfo = finfo_open(FILEINFO_MIME_TYPE);
+      $mimeType = finfo_file($finfo, $uploadedFile['tmp_name']);
+      finfo_close($finfo);
+      
+      if (!in_array($mimeType, $allowedTypes)) {
+        http_response_code(400);
+        exit('Tipe file tidak didukung. Gunakan .ico, .png, .jpg, atau .gif');
+      }
+      
+      // Generate unique filename
+      $extension = pathinfo($uploadedFile['name'], PATHINFO_EXTENSION);
+      $filename = 'favicon_' . time() . '.' . $extension;
+      $uploadPath = __DIR__ . '/../../public/uploads/favicons/';
+      
+      // Create directory if not exists
+      if (!is_dir($uploadPath)) {
+        mkdir($uploadPath, 0755, true);
+      }
+      
+      $fullPath = $uploadPath . $filename;
+      
+      if (move_uploaded_file($uploadedFile['tmp_name'], $fullPath)) {
+        $settings['site_favicon'] = '/uploads/favicons/' . $filename;
+      } else {
+        http_response_code(500);
+        exit('Gagal mengupload favicon.');
+      }
+    } else {
+      // Keep existing favicon if no new upload
+      $configFile = __DIR__ . '/../../config/site.json';
+      if (file_exists($configFile)) {
+        $existingConfig = json_decode(file_get_contents($configFile), true) ?? [];
+        $settings['site_favicon'] = $existingConfig['site_favicon'] ?? '/favicon.ico';
+      }
+    }
+
+    $configFile = __DIR__ . '/../../config/site.json';
+    if (!file_put_contents($configFile, json_encode($settings, JSON_PRETTY_PRINT))) {
+      http_response_code(500);
+      exit('Failed to save settings');
+    }
+
+    header('Location: /admin/settings?saved=1');
+    exit;
+  }
+
+  public function editPost(): void {
+    AuthController::requireAdmin();
+    
+    $id = $_GET['id'] ?? null;
+    if (!$id) {
+      http_response_code(404);
+      exit('Post not found');
+    }
+
+    $pdo = require __DIR__ . '/../db.php';
+    
+    // Get post data
+    $stmt = $pdo->prepare('SELECT * FROM posts WHERE id = ?');
+    $stmt->execute([$id]);
+    $post = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$post) {
+      http_response_code(404);
+      exit('Post not found');
+    }
+
+    // Get categories for dropdown
+    $stmt = $pdo->prepare('SELECT * FROM categories ORDER BY name');
+    $stmt->execute();
+    $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $csrf = $this->csrf();
+    $this->view('admin/posts/edit', compact('post', 'categories', 'csrf'));
+  }
+
+  public function updatePost(): void {
+    AuthController::requireAdmin();
+    $this->csrf();
+
+    $id = $_POST['id'] ?? null;
+    if (!$id) {
+      http_response_code(404);
+      exit('Post not found');
+    }
+
+    $pdo = require __DIR__ . '/../db.php';
+    
+    // Check if post exists
+    $stmt = $pdo->prepare('SELECT * FROM posts WHERE id = ?');
+    $stmt->execute([$id]);
+    $existingPost = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$existingPost) {
+      http_response_code(404);
+      exit('Post not found');
+    }
+
+    $title = trim($_POST['title'] ?? '');
+    $content_md = trim($_POST['content_md'] ?? '');
+    $excerpt = trim($_POST['excerpt'] ?? '');
+    $category_id = !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null;
+    $meta_title = trim($_POST['meta_title'] ?? '');
+    $meta_description = trim($_POST['meta_description'] ?? '');
+
+    // Validate required fields
+    if (empty($title) || empty($content_md)) {
+      http_response_code(400);
+      exit('Title and content are required');
+    }
+
+    // Generate slug from title
+    $slug = $this->slugify($title);
+
+    // Check if slug already exists (excluding current post)
+    $stmt = $pdo->prepare('SELECT id FROM posts WHERE slug = ? AND id != ?');
+    $stmt->execute([$slug, $id]);
+    if ($stmt->fetch()) {
+      $slug .= '-' . time();
+    }
+
+    // Handle featured image upload
+    $featured_image = $existingPost['featured_image'];
+    if (isset($_FILES['featured_image']) && $_FILES['featured_image']['error'] === UPLOAD_ERR_OK) {
+      $uploadedFile = $_FILES['featured_image'];
+      
+      // Validate image
+      $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!in_array($uploadedFile['type'], $allowedTypes)) {
+        http_response_code(400);
+        exit('Invalid image type');
+      }
+
+      if ($uploadedFile['size'] > 5 * 1024 * 1024) { // 5MB
+        http_response_code(400);
+        exit('Image too large');
+      }
+
+      // Create upload directory
+      $uploadDir = __DIR__ . '/../../public/uploads/content/';
+      if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0755, true);
+      }
+
+      // Generate unique filename
+      $extension = pathinfo($uploadedFile['name'], PATHINFO_EXTENSION);
+      $filename = 'img_' . uniqid() . '.' . $extension;
+      $uploadPath = $uploadDir . $filename;
+
+      if (move_uploaded_file($uploadedFile['tmp_name'], $uploadPath)) {
+        // Delete old image if exists
+        if ($featured_image && file_exists(__DIR__ . '/../../public' . $featured_image)) {
+          unlink(__DIR__ . '/../../public' . $featured_image);
+        }
+        $featured_image = '/uploads/content/' . $filename;
+      }
+    }
+
+    // Set default meta values
+    if (empty($meta_title)) {
+      $meta_title = $title;
+    }
+    if (empty($meta_description)) {
+      $meta_description = $excerpt;
+    }
+
+    // Update post
+    $stmt = $pdo->prepare('
+      UPDATE posts 
+      SET title = ?, slug = ?, content_md = ?, excerpt = ?, category_id = ?, 
+          featured_image = ?, meta_title = ?, meta_description = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    ');
+
+    if ($stmt->execute([
+      $title, $slug, $content_md, $excerpt, $category_id,
+      $featured_image, $meta_title, $meta_description, $id
+    ])) {
+      $_SESSION['success'] = 'Post berhasil diperbarui';
+      header('Location: /admin/posts');
+    } else {
+      http_response_code(500);
+      exit('Failed to update post');
+    }
     exit;
   }
 }

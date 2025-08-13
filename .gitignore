@@ -1,0 +1,54 @@
+# Dependencies
+/vendor/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+*.log
+/logs/
+
+# Database
+*.sqlite
+*.sqlite3
+
+# Cache & Sessions
+/storage/cache/*
+!/storage/cache/.gitkeep
+/storage/sessions/*
+!/storage/sessions/.gitkeep
+
+# Uploads (optional - comment if you want to track uploads)
+/storage/uploads/*
+!/storage/uploads/.gitkeep
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+/tmp/
+*.tmp
+*.bak
+*.backup
+
+# Config files with sensitive data
+config/database.php
