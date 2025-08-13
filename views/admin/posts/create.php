@@ -210,6 +210,13 @@ document.addEventListener('DOMContentLoaded', function() {
             uniqueId: 'post_content',
             delay: 1000,
         },
+        toolbar: [
+            'bold', 'italic', 'heading', '|',
+            'quote', 'unordered-list', 'ordered-list', '|',
+            'link', 'upload-image', '|',
+            'preview', 'side-by-side', 'fullscreen', '|',
+            'guide'
+        ],
         uploadImage: true,
         imageUploadEndpoint: '/upload-image.php',
         imageCSRFToken: '<?= htmlspecialchars($csrf) ?>',
@@ -375,6 +382,46 @@ document.addEventListener('DOMContentLoaded', function() {
         // normalize slug just before submit
         slug.value = toSlug(slug.value || title.value);
     });
+
+    // Featured image preview
+    const featuredImageInput = document.getElementById('featured_image');
+    
+    if (featuredImageInput) {
+        featuredImageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                // Validate file size (5MB max)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Ukuran gambar maksimal 5MB');
+                    featuredImageInput.value = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const previewContainer = featuredImageInput.parentNode;
+                    const existingPreview = previewContainer.querySelector('.featured-image-preview');
+                    
+                    if (existingPreview) {
+                        existingPreview.remove();
+                    }
+                    
+                    const previewDiv = document.createElement('div');
+                    previewDiv.className = 'featured-image-preview mb-2 p-3 border border-gray-200 rounded-lg bg-gray-50';
+                    previewDiv.innerHTML = `
+                        <img src="${e.target.result}" alt="Featured image preview" class="max-w-xs h-32 object-cover rounded shadow-sm">
+                        <p class="text-sm text-gray-600 mt-2">Preview gambar (akan disimpan saat submit)</p>
+                    `;
+                    previewContainer.insertBefore(previewDiv, featuredImageInput);
+                };
+                reader.readAsDataURL(file);
+            } else if (file) {
+                // File selected but not an image
+                alert('Mohon pilih file gambar (JPEG, PNG, GIF, WebP)');
+                featuredImageInput.value = '';
+            }
+        });
+    }
 
     // Initial counters
     titleCount.textContent = `0/255`;

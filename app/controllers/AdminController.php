@@ -107,22 +107,41 @@ class AdminController
     $baseSlug = $slugIn !== '' ? $this->slugify($slugIn) : $this->slugify($title);
     $slug     = $this->uniqueSlug($baseSlug, $pdo);
 
-    // Handle featured image upload
+    // Handle featured image upload with optimization
     $featuredImage = null;
     if (!empty($_FILES['featured_image']['name'])) {
         $uploadedFile = $_FILES['featured_image'];
         if ($uploadedFile['error'] === UPLOAD_ERR_OK) {
-            $ext = strtolower(pathinfo($uploadedFile['name'], PATHINFO_EXTENSION));
-            if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
-                $newFilename = uniqid('img_') . '.' . $ext;
-                $destination = __DIR__ . '/../../public/uploads/featured-image/' . $newFilename;
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mime = finfo_file($finfo, $uploadedFile['tmp_name']);
+            finfo_close($finfo);
+            
+            if (in_array($mime, $allowedMimes)) {
+                $uploadDir = __DIR__ . '/../../public/uploads/featured-image';
                 
-                if (!is_dir(dirname($destination))) {
-                    mkdir(dirname($destination), 0755, true);
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
                 }
                 
-                if (move_uploaded_file($uploadedFile['tmp_name'], $destination)) {
-                    $featuredImage = $newFilename;
+                try {
+                    require_once __DIR__ . '/../helpers/image.php';
+                    $optimizer = new ImageOptimizer(1200, 630, 90); // Featured image: 1200x630 for social sharing
+                    $result = $optimizer->optimizeUploadedFile(
+                        $uploadedFile['tmp_name'], 
+                        $uploadedFile['name'], 
+                        $uploadDir
+                    );
+                    $featuredImage = '/uploads/featured-image/' . $result['filename'];
+                } catch (Exception $e) {
+                    // Fallback to original upload method if optimization fails
+                    $ext = strtolower(pathinfo($uploadedFile['name'], PATHINFO_EXTENSION));
+                    $newFilename = uniqid('img_') . '.' . $ext;
+                    $destination = $uploadDir . '/' . $newFilename;
+                    
+                    if (move_uploaded_file($uploadedFile['tmp_name'], $destination)) {
+                        $featuredImage = '/uploads/featured-image/' . $newFilename;
+                    }
                 }
             }
         }
@@ -429,8 +448,13 @@ class AdminController
     $stmt->execute();
     $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Get attachments for this post
+    $stmt = $pdo->prepare('SELECT filename, mime_type, kind FROM attachments WHERE post_id = ?');
+    $stmt->execute([$id]);
+    $attachments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
     $csrf = $this->csrf();
-    $this->view('admin/posts/edit', compact('post', 'categories', 'csrf'));
+    $this->view('admin/posts/edit', compact('post', 'categories', 'attachments', 'csrf'));
   }
 
   public function updatePost(int $id = null): void {
@@ -482,40 +506,62 @@ class AdminController
       $slug .= '-' . time();
     }
 
-    // Handle featured image upload
+    // Handle featured image upload with optimization
     $featured_image = $existingPost['featured_image'];
     if (isset($_FILES['featured_image']) && $_FILES['featured_image']['error'] === UPLOAD_ERR_OK) {
       $uploadedFile = $_FILES['featured_image'];
       
-      // Validate image
-      $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-      if (!in_array($uploadedFile['type'], $allowedTypes)) {
+      // Validate image with finfo for better accuracy
+      $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      $finfo = finfo_open(FILEINFO_MIME_TYPE);
+      $mime = finfo_file($finfo, $uploadedFile['tmp_name']);
+      finfo_close($finfo);
+      
+      if (!in_array($mime, $allowedMimes)) {
         http_response_code(400);
         exit('Invalid image type');
       }
 
-      if ($uploadedFile['size'] > 5 * 1024 * 1024) { // 5MB
+      if ($uploadedFile['size'] > 10 * 1024 * 1024) { // 10MB before processing
         http_response_code(400);
         exit('Image too large');
       }
 
       // Create upload directory
-      $uploadDir = __DIR__ . '/../../public/uploads/content/';
+      $uploadDir = __DIR__ . '/../../public/uploads/featured-image';
       if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0755, true);
       }
 
-      // Generate unique filename
-      $extension = pathinfo($uploadedFile['name'], PATHINFO_EXTENSION);
-      $filename = 'img_' . uniqid() . '.' . $extension;
-      $uploadPath = $uploadDir . $filename;
-
-      if (move_uploaded_file($uploadedFile['tmp_name'], $uploadPath)) {
+      try {
+        require_once __DIR__ . '/../helpers/image.php';
+        $optimizer = new ImageOptimizer(1200, 630, 90); // Featured image optimized for social sharing
+        $result = $optimizer->optimizeUploadedFile(
+          $uploadedFile['tmp_name'], 
+          $uploadedFile['name'], 
+          $uploadDir
+        );
+        
         // Delete old image if exists
         if ($featured_image && file_exists(__DIR__ . '/../../public' . $featured_image)) {
           unlink(__DIR__ . '/../../public' . $featured_image);
         }
-        $featured_image = '/uploads/content/' . $filename;
+        
+        $featured_image = '/uploads/featured-image/' . $result['filename'];
+        
+      } catch (Exception $e) {
+        // Fallback to original method if optimization fails
+        $extension = pathinfo($uploadedFile['name'], PATHINFO_EXTENSION);
+        $filename = 'img_' . uniqid() . '.' . $extension;
+        $uploadPath = $uploadDir . '/' . $filename;
+
+        if (move_uploaded_file($uploadedFile['tmp_name'], $uploadPath)) {
+          // Delete old image if exists
+          if ($featured_image && file_exists(__DIR__ . '/../../public' . $featured_image)) {
+            unlink(__DIR__ . '/../../public' . $featured_image);
+          }
+          $featured_image = '/uploads/featured-image/' . $filename;
+        }
       }
     }
 

@@ -126,6 +126,23 @@
 
                         <div>
                             <label for="file" class="block text-sm font-medium text-gray-700">Upload file asli (PDF/DOCX, opsional, maks 5MB)</label>
+                            <?php if(isset($attachments) && !empty($attachments)): ?>
+                                <div class="mb-2">
+                                    <p class="text-sm text-gray-600">File saat ini:</p>
+                                    <?php foreach($attachments as $attachment): ?>
+                                        <div class="flex items-center space-x-2 text-sm text-blue-600">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            <a href="/storage/uploads/<?= htmlspecialchars($attachment['filename']) ?>" target="_blank" class="hover:underline">
+                                                <?= htmlspecialchars($attachment['filename']) ?>
+                                            </a>
+                                            <span class="text-gray-500">(<?= htmlspecialchars($attachment['mime_type']) ?>)</span>
+                                        </div>
+                                    <?php endforeach; ?>
+                                    <p class="text-xs text-gray-500 mt-1">File baru akan mengganti yang lama</p>
+                                </div>
+                            <?php endif; ?>
                             <input id="file" type="file" name="file" accept=".pdf,.docx"
                                    class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                             <div class="mt-1 text-sm text-gray-500">
@@ -226,6 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
         imageCSRFHeader: 'X-CSRF-Token',
         imageMaxSize: 5 * 1024 * 1024, // 5MB
         imageAccept: 'image/png, image/jpeg, image/gif, image/webp',
+        toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "upload-image", "|", "preview", "side-by-side", "fullscreen", "|", "guide"],
         imageUploadFunction: (file, onSuccess, onError) => {
             const formData = new FormData();
             formData.append('image', file);
@@ -385,6 +403,61 @@ document.addEventListener('DOMContentLoaded', function() {
         // normalize slug just before submit
         slug.value = toSlug(slug.value || title.value);
     });
+
+    // Featured image preview
+    const featuredImageInput = document.getElementById('featured_image');
+    const featuredImagePreview = document.querySelector('img[alt="Current featured image"]');
+    
+    if (featuredImageInput) {
+        featuredImageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const previewContainer = featuredImageInput.parentNode;
+            const existingNewPreview = previewContainer.querySelector('.featured-image-preview');
+            
+            // Remove existing new preview
+            if (existingNewPreview) {
+                existingNewPreview.remove();
+            }
+            
+            if (file && file.type.startsWith('image/')) {
+                // Validate file size (5MB max)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Ukuran gambar maksimal 5MB');
+                    featuredImageInput.value = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // If there's an existing preview image, update it
+                    if (featuredImagePreview) {
+                        featuredImagePreview.src = e.target.result;
+                        featuredImagePreview.alt = 'New featured image preview';
+                        // Update the description text
+                        const currentImageText = featuredImagePreview.parentNode.querySelector('p');
+                        if (currentImageText) {
+                            currentImageText.textContent = 'Preview gambar baru (akan disimpan saat submit)';
+                            currentImageText.className = 'text-sm text-blue-600 mt-1 font-medium';
+                        }
+                    } else {
+                        // Create new preview if none exists
+                        const previewDiv = document.createElement('div');
+                        previewDiv.className = 'featured-image-preview mb-2 p-3 border border-gray-200 rounded-lg bg-gray-50';
+                        previewDiv.innerHTML = `
+                            <img src="${e.target.result}" alt="New featured image preview" class="max-w-xs h-32 object-cover rounded shadow-sm">
+                            <p class="text-sm text-blue-600 mt-2 font-medium">Preview gambar baru (akan disimpan saat submit)</p>
+                        `;
+                        previewContainer.insertBefore(previewDiv, featuredImageInput);
+                    }
+                };
+                reader.readAsDataURL(file);
+            } else if (file) {
+                // File selected but not an image
+                alert('Mohon pilih file gambar (JPEG, PNG, GIF, WebP)');
+                featuredImageInput.value = '';
+            }
+        });
+    }
 
     // Initial counters (set to actual values for edit mode)
     titleCount.textContent = `${title.value.length}/255`;

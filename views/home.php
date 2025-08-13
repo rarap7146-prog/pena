@@ -22,6 +22,20 @@
     );
     
     include __DIR__ . '/partials/meta-tags.php';
+    
+    // Include schema helper
+    require_once __DIR__ . '/../app/helpers/schema.php';
+    ?>
+    
+    <!-- JSON-LD Schema Markup for Homepage -->
+    <?php
+    // Generate Website Schema
+    $websiteSchema = generateWebsiteSchema($siteSettings);
+    outputJsonLdSchema($websiteSchema);
+    
+    // Generate Organization Schema
+    $organizationSchema = generateOrganizationSchema($siteSettings);
+    outputJsonLdSchema($organizationSchema);
     ?>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -40,12 +54,23 @@
         <div class="space-y-6">
         <?php foreach($posts as $p): ?>
             <article class="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                <h2 class="text-xl font-semibold mb-2">
-                    <a href="/post/<?=htmlspecialchars($p['slug'])?>" 
-                       class="text-blue-600 hover:text-blue-800 hover:underline">
-                        <?=htmlspecialchars($p['title'])?>
-                    </a>
-                </h2>
+                <div class="flex justify-between items-start mb-2">
+                    <h2 class="text-xl font-semibold flex-1">
+                        <a href="/post/<?=htmlspecialchars($p['slug'])?>" 
+                           class="text-blue-600 hover:text-blue-800 hover:underline">
+                            <?=htmlspecialchars($p['title'])?>
+                        </a>
+                    </h2>
+                    <?php if (!empty($_SESSION['is_admin'])): ?>
+                        <a href="/admin/posts/<?= $p['id'] ?>/edit" 
+                           class="ml-3 inline-flex items-center px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                           title="Edit artikel">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                        </a>
+                    <?php endif; ?>
+                </div>
                 <div class="text-sm text-gray-500 flex items-center space-x-2">
                     <span><?=date('j F Y', strtotime($p['created_at']))?></span>
                     <?php if(!empty($p['category_name'])): ?>

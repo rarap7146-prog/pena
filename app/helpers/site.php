@@ -1,18 +1,27 @@
 <?php
 function getSiteSettings() {
-    $configFile = __DIR__ . '/../../config/site.json';
-    $defaults = [
-        'site_name' => 'Araska.id',
-        'site_description' => 'Dokumen dan informasi terkini',
-        'site_favicon' => '/favicon.ico'
-    ];
-    
-    if (file_exists($configFile)) {
-        $config = json_decode(file_get_contents($configFile), true) ?? [];
-        return array_merge($defaults, $config);
+    $configPath = __DIR__ . '/../../config/site.json';
+    if (file_exists($configPath)) {
+        $content = file_get_contents($configPath);
+        return json_decode($content, true) ?: [];
+    }
+    return [];
+}
+
+function getReadingTime($content) {
+    if (empty($content)) {
+        return 0;
     }
     
-    return $defaults;
+    $wordCount = str_word_count(strip_tags($content));
+    return max(1, ceil($wordCount / 200)); // 200 words per minute average
+}
+
+function formatReadingTime($minutes) {
+    if ($minutes == 1) {
+        return '1 menit baca';
+    }
+    return $minutes . ' menit baca';
 }
 
 function getCanonicalUrl($path = '') {

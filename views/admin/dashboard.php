@@ -98,6 +98,10 @@
                                 </div>
                             </div>
                             <div class="ml-4">
+                              <a href="/admin/posts/<?= (int)$p['id'] ?>/edit" 
+                                class="px-3 py-1 mx-2 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100">
+                                Edit
+                              </a>
                                 <form method="post" action="/admin/post/delete" class="inline" 
                                       onsubmit="return confirm('Hapus dokumen ini? Tindakan tidak bisa dibatalkan.');">
                                     <input type="hidden" name="csrf" value="<?=htmlspecialchars($csrf)?>">

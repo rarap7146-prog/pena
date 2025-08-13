@@ -1,11 +1,13 @@
 <?php
 declare(strict_types=1);
 
-
 session_start();
 require_once __DIR__ . '/../app/controllers/AuthController.php';
+require_once __DIR__ . '/../app/helpers/image.php';
+
 // Pastikan user sudah login sebagai admin
 AuthController::requireAdmin();
+
 // Validasi CSRF
 if (!isset($_POST['csrf']) || !hash_equals($_SESSION['csrf'], $_POST['csrf'])) {
     http_response_code(403);
@@ -14,86 +16,72 @@ if (!isset($_POST['csrf']) || !hash_equals($_SESSION['csrf'], $_POST['csrf'])) {
 
 $response = ['success' => false];
 
-// Handle file upload
-if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-    $file = $_FILES['image'];
-    
-    // Validate mime type
-    $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-    $mime = finfo_file($finfo, $file['tmp_name']);
-    finfo_close($finfo);
-    
-    if (!in_array($mime, $allowedMimes)) {
-        http_response_code(400);
-        exit(json_encode(['error' => 'Invalid file type']));
-    }
-    
-    // Generate unique filename
-    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-    $filename = uniqid('img_') . '.' . $ext;
+try {
+    $optimizer = new ImageOptimizer(600, 600, 85); // max 600px width/height, 85% quality
     $uploadDir = __DIR__ . '/uploads/content';
     
     // Ensure directory exists
     if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0755, true);
     }
-    
-    $destination = $uploadDir . '/' . $filename;
-    
-    if (move_uploaded_file($file['tmp_name'], $destination)) {
+
+    // Handle file upload
+    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES['image'];
+        
+        // Validate mime type
+        $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+        
+        if (!in_array($mime, $allowedMimes)) {
+            http_response_code(400);
+            exit(json_encode(['error' => 'Invalid file type. Allowed: JPEG, PNG, GIF, WebP']));
+        }
+        
+        // Check file size (max 10MB before processing)
+        if ($file['size'] > 10 * 1024 * 1024) {
+            http_response_code(400);
+            exit(json_encode(['error' => 'File too large. Maximum 10MB allowed.']));
+        }
+        
+        // Optimize image
+        $result = $optimizer->optimizeUploadedFile($file['tmp_name'], $file['name'], $uploadDir);
+        
         $response = [
             'success' => true,
-            'filename' => $filename,
-            'url' => '/uploads/content/' . $filename
+            'filename' => $result['filename'],
+            'url' => '/uploads/content/' . $result['filename'],
+            'format' => $result['format'],
+            'size' => $optimizer->formatFileSize($result['size']),
+            'dimensions' => $result['dimensions'][0] . 'x' . $result['dimensions'][1]
         ];
-    } else {
-        http_response_code(500);
-        $response = ['error' => 'Failed to save file'];
-    }
-} elseif (isset($_POST['image'])) {
-    // Handle clipboard paste (base64 image data)
-    $data = $_POST['image'];
-    if (preg_match('/^data:image\/(\w+);base64,/', $data, $type)) {
-        $data = substr($data, strpos($data, ',') + 1);
-        $type = strtolower($type[1]); // jpg, png, gif
         
-        if (!in_array($type, ['jpeg', 'jpg', 'png', 'gif'])) {
-            http_response_code(400);
-            exit(json_encode(['error' => 'Invalid image type']));
-        }
+    } elseif (isset($_POST['image'])) {
+        // Handle clipboard paste (base64 image data)
+        $data = $_POST['image'];
         
-        $data = base64_decode($data);
+        // Optimize base64 image
+        $result = $optimizer->optimizeBase64Image($data, $uploadDir);
         
-        if ($data === false) {
-            http_response_code(400);
-            exit(json_encode(['error' => 'Invalid image data']));
-        }
+        $response = [
+            'success' => true,
+            'filename' => $result['filename'],
+            'url' => '/uploads/content/' . $result['filename'],
+            'format' => $result['format'],
+            'size' => $optimizer->formatFileSize($result['size']),
+            'dimensions' => $result['dimensions'][0] . 'x' . $result['dimensions'][1]
+        ];
         
-        $filename = uniqid('img_') . '.' . $type;
-        $uploadDir = __DIR__ . '/../src/uploads/content';
-        
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-        
-        if (file_put_contents($uploadDir . '/' . $filename, $data)) {
-            $response = [
-                'success' => true,
-                'filename' => $filename,
-                'url' => '/uploads/content/' . $filename
-            ];
-        } else {
-            http_response_code(500);
-            $response = ['error' => 'Failed to save image'];
-        }
     } else {
         http_response_code(400);
-        $response = ['error' => 'Invalid image data format'];
+        $response = ['error' => 'No image data received'];
     }
-} else {
-    http_response_code(400);
-    $response = ['error' => 'No image data received'];
+    
+} catch (Exception $e) {
+    http_response_code(500);
+    $response = ['error' => 'Image processing failed: ' . $e->getMessage()];
 }
 
 header('Content-Type: application/json');
