@@ -9,6 +9,7 @@
   --text-accent: #2563eb;
   --border-primary: #e5e7eb;
   --border-secondary: #d1d5db;
+  --border-tertiary: #f3f4f6;
   --shadow: rgba(0, 0, 0, 0.1);
 }
 
@@ -22,6 +23,7 @@
   --text-accent: #60a5fa;
   --border-primary: #374151;
   --border-secondary: #4b5563;
+  --border-tertiary: #6b7280;
   --shadow: rgba(0, 0, 0, 0.3);
 }
 
@@ -64,6 +66,58 @@
 [data-theme="dark"] .prose blockquote {
   color: var(--text-secondary);
   border-left-color: var(--border-secondary);
+}
+
+/* Dark mode prose elements */
+[data-theme="dark"] .prose h1,
+[data-theme="dark"] .prose h2,
+[data-theme="dark"] .prose h3,
+[data-theme="dark"] .prose h4,
+[data-theme="dark"] .prose h5,
+[data-theme="dark"] .prose h6 {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .prose p,
+[data-theme="dark"] .prose li {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .prose strong {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .prose em {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .prose hr {
+  border-color: var(--border-secondary);
+}
+
+[data-theme="dark"] .prose ul > li::marker,
+[data-theme="dark"] .prose ol > li::marker {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .prose table {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .prose thead {
+  border-bottom-color: var(--border-secondary);
+}
+
+[data-theme="dark"] .prose thead th {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .prose tbody tr {
+  border-bottom-color: var(--border-tertiary);
+}
+
+[data-theme="dark"] .prose tbody td {
+  color: var(--text-primary);
 }
 
 /* Smooth transitions for theme switching */

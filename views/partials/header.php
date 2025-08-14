@@ -83,7 +83,8 @@ $isHomePage = ($_SERVER['REQUEST_URI'] === '/' || $_SERVER['REQUEST_URI'] === '/
                 </button>
             </div>
 
-            <!-- Mobile Search Box (Always Visible) -->
+            <!-- Mobile Search Box (Show only when not on home page) -->
+            <?php if (!$isHomePage): ?>
             <div class="mt-4">
                 <form method="GET" action="/search" class="relative" id="mobileSearchForm">
                     <input type="text" 
@@ -105,6 +106,7 @@ $isHomePage = ($_SERVER['REQUEST_URI'] === '/' || $_SERVER['REQUEST_URI'] === '/
                     </div>
                 </form>
             </div>
+            <?php endif; ?>
 
             <!-- Mobile Menu (Collapsible Navigation) -->
             <div id="mobileMenu" class="hidden mt-4">

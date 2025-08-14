@@ -188,40 +188,40 @@ $isAdmin = !empty($_SESSION['is_admin']);
 
             <div class="prose prose-lg max-w-none" style="
                 max-width: none;
-                color: #374151;
+                color: var(--text-primary);
                 line-height: 1.75;
                 font-size: 1rem;
             ">
                 <style>
-                .prose h1 { font-size: 2.25em; font-weight: 800; line-height: 1.2; margin-top: 0; margin-bottom: 0.8889em; color: #111827; }
-                .prose h2 { font-size: 1.5em; font-weight: 700; line-height: 1.3333; margin-top: 2em; margin-bottom: 1em; color: #111827; }
-                .prose h3 { font-size: 1.25em; font-weight: 600; line-height: 1.6; margin-top: 1.6em; margin-bottom: 0.6em; color: #111827; }
-                .prose p { margin-top: 1.25em; margin-bottom: 1.25em; }
-                .prose a { color: #2563eb; text-decoration: underline; font-weight: 500; }
-                .prose a:hover { color: #1d4ed8; }
-                .prose strong { color: #111827; font-weight: 600; }
+                .prose h1 { font-size: 2.25em; font-weight: 800; line-height: 1.2; margin-top: 0; margin-bottom: 0.8889em; color: var(--text-primary); }
+                .prose h2 { font-size: 1.5em; font-weight: 700; line-height: 1.3333; margin-top: 2em; margin-bottom: 1em; color: var(--text-primary); }
+                .prose h3 { font-size: 1.25em; font-weight: 600; line-height: 1.6; margin-top: 1.6em; margin-bottom: 0.6em; color: var(--text-primary); }
+                .prose p { margin-top: 1.25em; margin-bottom: 1.25em; color: var(--text-primary); }
+                .prose a { color: var(--text-accent); text-decoration: underline; font-weight: 500; }
+                .prose a:hover { color: var(--text-accent); }
+                .prose strong { color: var(--text-primary); font-weight: 600; }
                 .prose ul { list-style-type: disc; margin-top: 1.25em; margin-bottom: 1.25em; padding-left: 1.625em; }
                 .prose ol { list-style-type: decimal; margin-top: 1.25em; margin-bottom: 1.25em; padding-left: 1.625em; }
-                .prose li { margin-top: 0.5em; margin-bottom: 0.5em; }
+                .prose li { margin-top: 0.5em; margin-bottom: 0.5em; color: var(--text-primary); }
                 .prose blockquote { 
                     font-weight: 500; 
                     font-style: italic; 
-                    color: #374151; 
-                    border-left: 0.25rem solid #d1d5db; 
+                    color: var(--text-secondary); 
+                    border-left: 0.25rem solid var(--border-secondary); 
                     margin-top: 1.6em; 
                     margin-bottom: 1.6em; 
                     padding-left: 1em; 
                 }
                 .prose code { 
-                    color: #111827; 
-                    background-color: #f3f4f6; 
+                    color: var(--text-primary); 
+                    background-color: var(--bg-tertiary); 
                     padding: 0.125rem 0.25rem; 
                     border-radius: 0.25rem; 
                     font-size: 0.875em; 
                 }
                 .prose pre { 
-                    color: #374151; 
-                    background-color: #f9fafb; 
+                    color: var(--text-primary); 
+                    background-color: var(--bg-tertiary); 
                     overflow-x: auto; 
                     font-size: 0.875em; 
                     line-height: 1.7142857; 
@@ -245,18 +245,20 @@ $isAdmin = !empty($_SESSION['is_admin']);
                     margin-bottom: 2em; 
                     font-size: 0.875em; 
                     line-height: 1.7142857; 
+                    color: var(--text-primary);
                 }
-                .prose thead { border-bottom: 1px solid #d1d5db; }
+                .prose thead { border-bottom: 1px solid var(--border-secondary); }
                 .prose thead th { 
-                    color: #111827; 
+                    color: var(--text-primary); 
                     font-weight: 600; 
                     vertical-align: bottom; 
                     padding: 0 0.5714286em 0.5714286em 0.5714286em; 
                 }
-                .prose tbody tr { border-bottom: 1px solid #e5e7eb; }
+                .prose tbody tr { border-bottom: 1px solid var(--border-tertiary); }
                 .prose tbody td { 
                     vertical-align: baseline; 
-                    padding: 0.5714286em; 
+                    padding: 0.5714286em;
+                    color: var(--text-primary); 
                 }
                 </style>
                 <?php 
