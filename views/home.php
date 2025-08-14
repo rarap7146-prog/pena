@@ -185,5 +185,7 @@
         <?php endforeach; ?>
         </div>
     </div>
+    
+    <?php include __DIR__ . '/partials/footer.php'; ?>
 </body>
 </html>

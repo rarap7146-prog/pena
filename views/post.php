@@ -298,5 +298,7 @@ $isAdmin = !empty($_SESSION['is_admin']);
         }
     });
     </script>
+    
+    <?php include __DIR__ . '/partials/footer.php'; ?>
 </body>
 </html>

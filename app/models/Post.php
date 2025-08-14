@@ -13,7 +13,7 @@ class Post
     public function all(): array
     {
         return $this->pdo->query(
-            "SELECT p.*, c.name as category_name 
+            "SELECT p.*, c.name as category_name, c.slug as category_slug 
              FROM posts p 
              LEFT JOIN categories c ON p.category_id = c.id 
              WHERE p.status = 'published' 
@@ -26,7 +26,7 @@ class Post
     public function allForAdmin(): array
     {
         return $this->pdo->query(
-            "SELECT p.*, c.name as category_name 
+            "SELECT p.*, c.name as category_name, c.slug as category_slug 
              FROM posts p 
              LEFT JOIN categories c ON p.category_id = c.id 
              ORDER BY p.created_at DESC"
@@ -36,7 +36,7 @@ class Post
     public function find(int $id): ?array
     {
         $stmt = $this->pdo->prepare(
-            "SELECT p.*, c.name as category_name 
+            "SELECT p.*, c.name as category_name, c.slug as category_slug 
              FROM posts p 
              LEFT JOIN categories c ON p.category_id = c.id 
              WHERE p.id = ? 
@@ -49,7 +49,7 @@ class Post
     public function findBySlug(string $slug): ?array
     {
         $stmt = $this->pdo->prepare(
-            "SELECT p.*, c.name as category_name 
+            "SELECT p.*, c.name as category_name, c.slug as category_slug 
              FROM posts p 
              LEFT JOIN categories c ON p.category_id = c.id 
              WHERE p.slug = ? 

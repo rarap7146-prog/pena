@@ -180,5 +180,7 @@
             </div>
         <?php endif; ?>
     </div>
+    
+    <?php include __DIR__ . '/partials/footer.php'; ?>
 </body>
 </html>
