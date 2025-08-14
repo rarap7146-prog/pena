@@ -129,5 +129,5 @@ if ($uri === '/admin/post/delete' && $method === 'POST') {
 }
 
 /* Fallback */
-http_response_code(404);
-echo '404';
+require_once __DIR__ . '/../app/helpers/errors.php';
+show404();

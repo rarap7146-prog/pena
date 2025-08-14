@@ -350,7 +350,10 @@ class AdminController
       'site_favicon' => '/favicon.ico', // default
       'home' => [
         'title' => trim($_POST['home_title'] ?? ''),
-        'meta_description' => trim($_POST['home_meta_description'] ?? '')
+        'meta_description' => trim($_POST['home_meta_description'] ?? ''),
+        'hero_title' => trim($_POST['home_hero_title'] ?? ''),
+        'hero_subtitle' => trim($_POST['home_hero_subtitle'] ?? ''),
+        'search_placeholder' => trim($_POST['home_search_placeholder'] ?? '')
       ]
     ];
 

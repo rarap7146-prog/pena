@@ -99,6 +99,40 @@
                                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"><?=htmlspecialchars($settings['home']['meta_description'] ?? '')?></textarea>
                                 <p class="mt-1 text-sm text-gray-500">Meta description khusus untuk halaman utama (opsional)</p>
                             </div>
+                            
+                            <div class="border-t border-gray-100 pt-4">
+                                <h4 class="text-sm font-medium text-gray-900 mb-3">Hero Section</h4>
+                                <p class="text-sm text-gray-600 mb-4">Atur teks yang ditampilkan di bagian hero halaman utama</p>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <label for="home_hero_title" class="block text-sm font-medium text-gray-700">Hero Title</label>
+                                        <input type="text" id="home_hero_title" name="home_hero_title" 
+                                               value="<?=htmlspecialchars($settings['home']['hero_title'] ?? 'Template & Contoh Dokumen')?>" 
+                                               placeholder="Template & Contoh Dokumen"
+                                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                        <p class="mt-1 text-sm text-gray-500">Judul utama yang ditampilkan di hero section</p>
+                                    </div>
+
+                                    <div>
+                                        <label for="home_hero_subtitle" class="block text-sm font-medium text-gray-700">Hero Subtitle</label>
+                                        <textarea id="home_hero_subtitle" name="home_hero_subtitle" 
+                                                  rows="2"
+                                                  placeholder="Temukan dan unduh beragam template dokumen berkualitas tinggi untuk pelajar dan profesional"
+                                                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"><?=htmlspecialchars($settings['home']['hero_subtitle'] ?? 'Temukan dan unduh beragam template dokumen berkualitas tinggi untuk pelajar dan profesional')?></textarea>
+                                        <p class="mt-1 text-sm text-gray-500">Deskripsi yang ditampilkan di bawah judul hero</p>
+                                    </div>
+
+                                    <div>
+                                        <label for="home_search_placeholder" class="block text-sm font-medium text-gray-700">Search Placeholder</label>
+                                        <input type="text" id="home_search_placeholder" name="home_search_placeholder" 
+                                               value="<?=htmlspecialchars($settings['home']['search_placeholder'] ?? 'Cari template, contoh CV, makalah...')?>" 
+                                               placeholder="Cari template, contoh CV, makalah..."
+                                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                        <p class="mt-1 text-sm text-gray-500">Placeholder text untuk kotak pencarian di hero section</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

@@ -71,8 +71,8 @@ class CategoryController
         // Get category by slug
         $category = $this->category->findBySlug($slug);
         if (!$category) {
-            http_response_code(404);
-            exit('Kategori tidak ditemukan');
+            require_once __DIR__ . '/../helpers/errors.php';
+            show404();
         }
 
         // Get posts in this category
@@ -178,8 +178,8 @@ class CategoryController
         
         $category = $this->category->find($id);
         if (!$category) {
-            http_response_code(404);
-            exit('Kategori tidak ditemukan');
+            require_once __DIR__ . '/../helpers/errors.php';
+            show404();
         }
         
         // Generate CSRF token

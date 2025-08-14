@@ -1,0 +1,9 @@
+# Custom 404 Error Page Configuration for Araska.id
+# Add this to your nginx server configuration:
+
+# error_page 404 /404-fallback.php;
+
+# For Apache users (.htaccess):
+# ErrorDocument 404 /404-fallback.php
+
+# This ensures even static files that don't exist will show our custom 404 page

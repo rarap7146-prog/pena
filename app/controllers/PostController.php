@@ -2,7 +2,13 @@
 class PostController {
   public function index() {
     $pdo = require __DIR__.'/../db.php';
-    $posts = $pdo->query("SELECT id,title,slug,excerpt,created_at FROM posts ORDER BY created_at DESC")->fetchAll();
+    $posts = $pdo->query("
+      SELECT p.id, p.title, p.slug, p.excerpt, p.created_at,
+             c.name as category_name, c.slug as category_slug 
+      FROM posts p 
+      LEFT JOIN categories c ON p.category_id = c.id 
+      ORDER BY p.created_at DESC
+    ")->fetchAll();
     $this->view('home', compact('posts'));
   }
   public function show(string $slug) {
@@ -17,8 +23,8 @@ class PostController {
     $st->execute([$slug]);
     $post = $st->fetch(); 
     if(!$post){ 
-        http_response_code(404); 
-        exit('Not found'); 
+        require_once __DIR__ . '/../helpers/errors.php';
+        show404();
     }
 
     $fs = $pdo->prepare("SELECT filename,mime_type,kind FROM attachments WHERE post_id=?");

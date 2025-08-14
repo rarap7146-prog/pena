@@ -14,183 +14,31 @@ $isAdmin = !empty($_SESSION['is_admin']);
     require_once __DIR__ . '/../app/helpers/site.php';
     require_once __DIR__ . '/../app/helpers/schema.php';
     $siteSettings = getSiteSettings();
-    ?>
-    <title><?=htmlspecialchars($post['meta_title'] ?? $post['title'])?> - <?=htmlspecialchars($siteSettings['site_name'])?></title>
-    <meta name="description" content="<?=htmlspecialchars($post['meta_description'] ?? $post['excerpt'] ?? $siteSettings['site_description'])?>">
     
-    <!-- Enhanced OpenGraph Meta Tags -->
-    <meta property="og:type" content="article">
-    <meta property="og:title" content="<?=htmlspecialchars($post['meta_title'] ?? $post['title'])?>">
-    <meta property="og:description" content="<?=htmlspecialchars($post['meta_description'] ?? $post['excerpt'] ?? $siteSettings['site_description'])?>">
-    <meta property="og:url" content="<?=htmlspecialchars($siteSettings['site_url'] ?? 'https://' . $_SERVER['HTTP_HOST'])?>/post/<?=htmlspecialchars($post['slug'])?>">
-    <meta property="og:site_name" content="<?=htmlspecialchars($siteSettings['site_name'])?>">
-    <?php if (!empty($post['featured_image'])): ?>
-    <meta property="og:image" content="<?=htmlspecialchars($siteSettings['site_url'] ?? 'https://' . $_SERVER['HTTP_HOST'])?><?=htmlspecialchars($post['featured_image'])?>">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <?php endif; ?>
+    // Generate meta tags for post
+    $meta = array(
+        'title' => ($post['meta_title'] ?? $post['title']) . ' - ' . $siteSettings['site_name'],
+        'description' => $post['meta_description'] ?? $post['excerpt'] ?? $siteSettings['site_description'],
+        'canonical_url' => ($siteSettings['site_url'] ?? 'https://' . $_SERVER['HTTP_HOST']) . '/post/' . $post['slug'],
+        'og_type' => 'article',
+        'og_image' => !empty($post['featured_image']) ? ($siteSettings['site_url'] ?? 'https://' . $_SERVER['HTTP_HOST']) . $post['featured_image'] : null,
+        'twitter_image' => !empty($post['featured_image']) ? ($siteSettings['site_url'] ?? 'https://' . $_SERVER['HTTP_HOST']) . $post['featured_image'] : null,
+        'robots' => 'index, follow'
+    );
+    
+    include __DIR__ . '/partials/meta-tags.php';
+    ?>
+    
+    <!-- Article-specific meta tags -->
     <meta property="article:published_time" content="<?=date('c', strtotime($post['created_at']))?>">
     <meta property="article:modified_time" content="<?=date('c', strtotime($post['updated_at'] ?? $post['created_at']))?>">
     <?php if (!empty($post['category_name'])): ?>
     <meta property="article:section" content="<?=htmlspecialchars($post['category_name'])?>">
     <?php endif; ?>
-    
-    <!-- Twitter Card Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="<?=htmlspecialchars($post['meta_title'] ?? $post['title'])?>">
-    <meta name="twitter:description" content="<?=htmlspecialchars($post['meta_description'] ?? $post['excerpt'] ?? $siteSettings['site_description'])?>">
     <?php if (!empty($post['featured_image'])): ?>
-    <meta name="twitter:image" content="<?=htmlspecialchars($siteSettings['site_url'] ?? 'https://' . $_SERVER['HTTP_HOST'])?><?=htmlspecialchars($post['featured_image'])?>">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     <?php endif; ?>
-    
-    <!-- Canonical URL -->
-    <link rel="canonical" href="<?=htmlspecialchars($siteSettings['site_url'] ?? 'https://' . $_SERVER['HTTP_HOST'])?>/post/<?=htmlspecialchars($post['slug'])?>">
-    
-    <link rel="icon" href="<?=htmlspecialchars($siteSettings['site_favicon'])?>">
-    <link href="/css/style.css" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    typography: {
-                        DEFAULT: {
-                            css: {
-                                maxWidth: 'none',
-                                color: '#374151',
-                                lineHeight: '1.75',
-                                fontSize: '1rem',
-                                h1: {
-                                    fontSize: '2.25em',
-                                    fontWeight: '800',
-                                    lineHeight: '1.2',
-                                    marginTop: '0',
-                                    marginBottom: '0.8889em',
-                                },
-                                h2: {
-                                    fontSize: '1.5em',
-                                    fontWeight: '700',
-                                    lineHeight: '1.3333',
-                                    marginTop: '2em',
-                                    marginBottom: '1em',
-                                },
-                                h3: {
-                                    fontSize: '1.25em',
-                                    fontWeight: '600',
-                                    lineHeight: '1.6',
-                                    marginTop: '1.6em',
-                                    marginBottom: '0.6em',
-                                },
-                                p: {
-                                    marginTop: '1.25em',
-                                    marginBottom: '1.25em',
-                                },
-                                a: {
-                                    color: '#2563eb',
-                                    textDecoration: 'underline',
-                                    fontWeight: '500',
-                                },
-                                'a:hover': {
-                                    color: '#1d4ed8',
-                                },
-                                strong: {
-                                    color: '#111827',
-                                    fontWeight: '600',
-                                },
-                                ul: {
-                                    listStyleType: 'disc',
-                                    marginTop: '1.25em',
-                                    marginBottom: '1.25em',
-                                    paddingLeft: '1.625em',
-                                },
-                                ol: {
-                                    listStyleType: 'decimal',
-                                    marginTop: '1.25em',
-                                    marginBottom: '1.25em',
-                                    paddingLeft: '1.625em',
-                                },
-                                li: {
-                                    marginTop: '0.5em',
-                                    marginBottom: '0.5em',
-                                },
-                                blockquote: {
-                                    fontWeight: '500',
-                                    fontStyle: 'italic',
-                                    color: '#374151',
-                                    borderLeftWidth: '0.25rem',
-                                    borderLeftColor: '#d1d5db',
-                                    quotes: '"\\201C""\\201D""\\2018""\\2019"',
-                                    marginTop: '1.6em',
-                                    marginBottom: '1.6em',
-                                    paddingLeft: '1em',
-                                },
-                                code: {
-                                    color: '#111827',
-                                    backgroundColor: '#f3f4f6',
-                                    paddingLeft: '0.25rem',
-                                    paddingRight: '0.25rem',
-                                    paddingTop: '0.125rem',
-                                    paddingBottom: '0.125rem',
-                                    borderRadius: '0.25rem',
-                                    fontSize: '0.875em',
-                                },
-                                pre: {
-                                    color: '#374151',
-                                    backgroundColor: '#f9fafb',
-                                    overflowX: 'auto',
-                                    fontSize: '0.875em',
-                                    lineHeight: '1.7142857',
-                                    marginTop: '1.7142857em',
-                                    marginBottom: '1.7142857em',
-                                    borderRadius: '0.375rem',
-                                    paddingTop: '0.8571429em',
-                                    paddingRight: '1.1428571em',
-                                    paddingBottom: '0.8571429em',
-                                    paddingLeft: '1.1428571em',
-                                },
-                                img: {
-                                    marginTop: '2em',
-                                    marginBottom: '2em',
-                                    borderRadius: '0.5rem',
-                                },
-                                table: {
-                                    width: '100%',
-                                    tableLayout: 'auto',
-                                    textAlign: 'left',
-                                    marginTop: '2em',
-                                    marginBottom: '2em',
-                                    fontSize: '0.875em',
-                                    lineHeight: '1.7142857',
-                                },
-                                thead: {
-                                    borderBottomWidth: '1px',
-                                    borderBottomColor: '#d1d5db',
-                                },
-                                'thead th': {
-                                    color: '#111827',
-                                    fontWeight: '600',
-                                    verticalAlign: 'bottom',
-                                    paddingRight: '0.5714286em',
-                                    paddingBottom: '0.5714286em',
-                                    paddingLeft: '0.5714286em',
-                                },
-                                'tbody tr': {
-                                    borderBottomWidth: '1px',
-                                    borderBottomColor: '#e5e7eb',
-                                },
-                                'tbody td': {
-                                    verticalAlign: 'baseline',
-                                    paddingTop: '0.5714286em',
-                                    paddingRight: '0.5714286em',
-                                    paddingBottom: '0.5714286em',
-                                    paddingLeft: '0.5714286em',
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        }
-    </script>
     
     <!-- JSON-LD Schema Markup -->
     <?php
@@ -214,7 +62,7 @@ $isAdmin = !empty($_SESSION['is_admin']);
 <body class="bg-gray-50 font-sans">
     <?php include __DIR__ . '/partials/header.php'; ?>
     
-    <div class="max-w-4xl mx-auto px-4 py-8">       
+    <div class="max-w-2xl mx-auto px-4 py-8">       
         <!-- Breadcrumb -->
         <nav class="mb-8">
             <div class="flex items-center space-x-2 text-sm text-gray-600">
@@ -278,6 +126,63 @@ $isAdmin = !empty($_SESSION['is_admin']);
             <?php if(!empty($post['excerpt'])): ?>
                 <div class="text-lg text-gray-600 italic mb-6 font-medium">
                     <?=htmlspecialchars($post['excerpt'])?>
+                </div>
+            <?php endif; ?>
+
+            <!-- Collapsible Attachments Section (after excerpt) -->
+            <?php if(!empty($attachments)): ?>
+                <div class="mb-6">
+                    <button id="attachmentsToggle" 
+                            class="flex items-center w-full px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <svg id="attachmentsIcon" class="w-5 h-5 text-blue-600 mr-3 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"></path>
+                        </svg>
+                        <span class="font-medium text-blue-800">📎 Unduh Lampiran</span>
+                        <span class="ml-4 min-w-fit text-right text-blue-600 text-sm">🕳</span>
+                    </button>
+                    
+                    <div id="attachmentsContent" class="hidden mt-3 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                        <h4 class="text-sm font-semibold text-gray-900 mb-3">📥 Unduh File:</h4>
+                        <div class="space-y-2">
+                            <!-- PDF/DOCX Export -->
+                            <div class="flex flex-wrap gap-2">
+                                <a href="/download/pdf?slug=<?=urlencode($post['slug'])?>" 
+                                   class="inline-flex items-center px-3 py-2 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 transition-colors">
+                                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/>
+                                    </svg>
+                                    Artikel (PDF)
+                                </a>
+                                <a href="/download/docx?slug=<?=urlencode($post['slug'])?>" 
+                                   class="inline-flex items-center px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors">
+                                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/>
+                                    </svg>
+                                    Artikel (DOCX)
+                                </a>
+                            </div>
+                            
+                            <!-- Additional Attachments -->
+                            <?php if(count($attachments) > 0): ?>
+                                <div class="border-t border-gray-300 pt-3 mt-3">
+                                    <p class="text-xs text-gray-600 mb-2">File Lampiran:</p>
+                                    <div class="space-y-1">
+                                        <?php foreach($attachments as $f): ?>
+                                            <a href="/download/<?=htmlspecialchars($f['filename'])?>" 
+                                               target="_blank"
+                                               class="flex items-center px-3 py-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
+                                                <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                                                </svg>
+                                                <span class="truncate"><?=htmlspecialchars($f['filename'])?></span>
+                                                <span class="ml-auto text-xs text-gray-500">↗</span>
+                                            </a>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
                 </div>
             <?php endif; ?>
 
@@ -364,32 +269,32 @@ $isAdmin = !empty($_SESSION['is_admin']);
                     echo $Parsedown->text($post['content_md']); 
                 ?>
             </div>
-
-            <?php if(!empty($attachments)): ?>
-                <div class="mt-12 pt-6 border-t border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Unduh</h3>
-                    <div class="space-y-2">
-                        <a href="/download/pdf?slug=<?=urlencode($post['slug'])?>" 
-                           class="download-link inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors">
-                            Artikel dalam format PDF
-                        </a>
-                        <a href="/download/docx?slug=<?=urlencode($post['slug'])?>" 
-                           class="download-link inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors ml-2">
-                            Artikel dalam format DOCX
-                        </a>
-                        <?php foreach($attachments as $f): ?>
-                            <div>
-                                <a href="/download/<?=htmlspecialchars($f['filename'])?>" 
-                                   target="_blank"
-                                   class="download-link inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors" style="word-break:break-word">
-                                    <?=htmlspecialchars($f['filename'])?>
-                                </a>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            <?php endif; ?>
         </article>
     </div>
+    
+    <script>
+    // Attachments toggle functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggle = document.getElementById('attachmentsToggle');
+        const content = document.getElementById('attachmentsContent');
+        const icon = document.getElementById('attachmentsIcon');
+        
+        if (toggle && content && icon) {
+            toggle.addEventListener('click', function() {
+                const isHidden = content.classList.contains('hidden');
+                
+                if (isHidden) {
+                    content.classList.remove('hidden');
+                    icon.style.transform = 'rotate(90deg)';
+                    toggle.querySelector('span:last-child').textContent = '👁';
+                } else {
+                    content.classList.add('hidden');
+                    icon.style.transform = 'rotate(0deg)';
+                    toggle.querySelector('span:last-child').textContent = '🕳';
+                }
+            });
+        }
+    });
+    </script>
 </body>
 </html>

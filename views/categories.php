@@ -6,16 +6,23 @@
     <?php 
     require_once __DIR__ . '/../app/helpers/site.php';
     $siteSettings = getSiteSettings();
+    
+    // Generate meta tags for categories page
+    $meta = array(
+        'title' => 'Semua Kategori - ' . $siteSettings['site_name'],
+        'description' => 'Daftar semua kategori di ' . $siteSettings['site_name'],
+        'canonical_url' => ($siteSettings['site_url'] ?? 'https://' . $_SERVER['HTTP_HOST']) . '/categories',
+        'og_type' => 'website',
+        'robots' => 'index, follow'
+    );
+    
+    include __DIR__ . '/partials/meta-tags.php';
     ?>
-    <title>Semua Kategori - <?=htmlspecialchars($siteSettings['site_name'])?></title>
-    <meta name="description" content="Daftar semua kategori di <?=htmlspecialchars($siteSettings['site_name'])?>">
-    <link rel="icon" href="<?=htmlspecialchars($siteSettings['site_favicon'])?>">
-    <link href="/css/style.css" rel="stylesheet">
 </head>
 <body class="bg-gray-50 font-sans">
     <?php include __DIR__ . '/partials/header.php'; ?>
     
-    <div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto px-4 py-8">
         <div class="mb-8">
             <h1 class="text-4xl font-bold text-gray-900 mb-4">Semua Kategori</h1>
             <p class="text-xl text-gray-600">Jelajahi artikel berdasarkan kategori</p>
