@@ -13,13 +13,17 @@ class AdminController
     }
   }
 
-  private function csrf() {
-    $this->ensureSession();
-    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-      $_SESSION['csrf'] = bin2hex(random_bytes(16));
-      return $_SESSION['csrf'];
+  private function csrf(): string {
+    if (!isset($_SESSION['csrf'])) {
+      $_SESSION['csrf'] = bin2hex(random_bytes(32));
     }
-    return isset($_POST['csrf']) && hash_equals($_SESSION['csrf'] ?? '', $_POST['csrf']);
+    return $_SESSION['csrf'];
+  }
+
+  private function validateCsrf(): bool {
+    $result = isset($_POST['csrf']) && hash_equals($_SESSION['csrf'] ?? '', $_POST['csrf']);
+    error_log("CSRF Check - Session: " . ($_SESSION['csrf'] ?? 'none') . ", POST: " . ($_POST['csrf'] ?? 'none') . ", Result: " . ($result ? 'PASS' : 'FAIL'));
+    return $result;
   }
 
   private function slugify(string $text): string {
@@ -81,7 +85,11 @@ class AdminController
 
   public function store(): void {
     AuthController::requireAdmin();
-    $this->csrf();
+    
+    if (!$this->validateCsrf()) {
+      http_response_code(403);
+      exit('CSRF token mismatch');
+    }
 
     $pdo = require __DIR__ . '/../db.php';
 
@@ -101,6 +109,16 @@ class AdminController
     if (empty($content)) {
       http_response_code(400);
       exit('Content is required');
+    }
+
+    // Validate category exists if provided
+    if ($categoryId !== null) {
+      $categoryCheck = $pdo->prepare('SELECT id FROM categories WHERE id = ?');
+      $categoryCheck->execute([$categoryId]);
+      if (!$categoryCheck->fetch()) {
+        error_log("Invalid category_id: {$categoryId}. Setting to NULL.");
+        $categoryId = null;
+      }
     }
 
     // Slug base and uniqueness
@@ -227,7 +245,11 @@ class AdminController
 
   public function delete(): void {
     AuthController::requireAdmin();
-    $this->csrf();
+    
+    if (!$this->validateCsrf()) {
+      http_response_code(403);
+      exit('CSRF token mismatch');
+    }
 
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
       http_response_code(405);
@@ -249,10 +271,31 @@ class AdminController
       exit('Post not found');
     }
 
+    // Delete associated attachments first
+    $stmt = $pdo->prepare('SELECT filename FROM attachments WHERE post_id = ?');
+    $stmt->execute([$id]);
+    $attachments = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    
+    // Delete attachment files from filesystem
+    $uploadsDir = __DIR__ . '/../../storage/uploads';
+    foreach ($attachments as $filename) {
+        $filePath = $uploadsDir . '/' . $filename;
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+    }
+    
+    // Delete attachment records from database
+    $stmt = $pdo->prepare('DELETE FROM attachments WHERE post_id = ?');
+    $stmt->execute([$id]);
+
+    // Delete the post
     $del = $pdo->prepare('DELETE FROM posts WHERE id = ?');
     $del->execute([$id]);
 
-    header('Location: /admin');
+    // Set success message and redirect to posts index
+    $_SESSION['success'] = 'Post berhasil dihapus';
+    header('Location: /admin/posts');
     exit;
   }
 
@@ -296,7 +339,7 @@ class AdminController
   public function updateSettings(): void {
     AuthController::requireAdmin();
     
-    if (!$this->csrf()) {
+    if (!$this->validateCsrf()) {
       http_response_code(403);
       exit('CSRF token mismatch');
     }
@@ -386,7 +429,7 @@ class AdminController
   public function updateAnalytics(): void {
     AuthController::requireAdmin();
     
-    if (!$this->csrf()) {
+    if (!$this->validateCsrf()) {
       http_response_code(403);
       exit('CSRF token mismatch');
     }
@@ -459,7 +502,11 @@ class AdminController
 
   public function updatePost(int $id = null): void {
     AuthController::requireAdmin();
-    $this->csrf();
+    
+    if (!$this->validateCsrf()) {
+      http_response_code(403);
+      exit('CSRF token mismatch');
+    }
 
     // Get ID from parameter or POST
     if ($id === null) {
@@ -494,6 +541,15 @@ class AdminController
     if (empty($title) || empty($content_md)) {
       http_response_code(400);
       exit('Title and content are required');
+    }
+
+    // Validate category exists if provided
+    if ($category_id !== null) {
+      $categoryCheck = $pdo->prepare('SELECT id FROM categories WHERE id = ?');
+      $categoryCheck->execute([$category_id]);
+      if (!$categoryCheck->fetch()) {
+        $category_id = null;
+      }
     }
 
     // Generate slug from title
@@ -573,6 +629,68 @@ class AdminController
       $meta_description = $excerpt;
     }
 
+    // Handle attachment file upload (replace old attachment if new file uploaded)
+    if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
+        $tmp = $_FILES['file']['tmp_name'];
+        $originalName = $_FILES['file']['name'];
+        $size = $_FILES['file']['size'];
+        
+        // Get MIME type
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $tmp);
+        finfo_close($finfo);
+        
+        // Check allowed file types
+        $allowedMimes = [
+            'application/pdf',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+            'application/msword', // .doc
+            'text/plain'
+        ];
+        
+        $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+        $allowedExts = ['pdf', 'docx', 'doc', 'txt'];
+        
+        if (in_array($mime, $allowedMimes) && in_array($ext, $allowedExts)) {
+            $uploadsDir = __DIR__ . '/../../storage/uploads';
+            
+            if (!is_dir($uploadsDir)) {
+                mkdir($uploadsDir, 0755, true);
+            }
+            
+            // Delete old attachment files for this post
+            $stmt = $pdo->prepare('SELECT filename FROM attachments WHERE post_id = ?');
+            $stmt->execute([$id]);
+            $oldAttachments = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            
+            foreach ($oldAttachments as $oldFile) {
+                $oldPath = $uploadsDir . '/' . $oldFile;
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
+            }
+            
+            // Delete old attachment records
+            $stmt = $pdo->prepare('DELETE FROM attachments WHERE post_id = ?');
+            $stmt->execute([$id]);
+            
+            // Upload new file
+            $safeName = $id . '_' . time() . '_' . preg_replace('~[^a-zA-Z0-9.\-_]~', '_', $originalName);
+            $target = $uploadsDir . '/' . $safeName;
+            
+            if (move_uploaded_file($tmp, $target)) {
+                chmod($target, 0644);
+                
+                // Insert new attachment record
+                $stmt = $pdo->prepare(
+                    "INSERT INTO attachments (post_id, filename, mime_type, kind, created_at)
+                    VALUES (?, ?, ?, ?, NOW())"
+                );
+                $stmt->execute([$id, $safeName, $mime, 'source']);
+            }
+        }
+    }
+
     // Update post
     $stmt = $pdo->prepare('
       UPDATE posts 
@@ -591,6 +709,7 @@ class AdminController
       http_response_code(500);
       exit('Failed to update post');
     }
+    
     exit;
   }
 }

@@ -1,3 +1,10 @@
+<?php 
+// Check admin status once
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+$isAdmin = !empty($_SESSION['is_admin']);
+?>
 <!doctype html>
 <html>
 <head>
@@ -205,14 +212,7 @@
     ?>
 </head>
 <body class="bg-gray-50 font-sans">
-    <div class="max-w-2xl mx-auto px-5 py-8">
-        <?php 
-        // Check admin status once
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
-        $isAdmin = !empty($_SESSION['is_admin']);
-        ?>
+    <div class="max-w-2xl mx-auto px-5 py-8">       
         
         <nav class="mb-8">
             <div class="flex justify-between items-center">
