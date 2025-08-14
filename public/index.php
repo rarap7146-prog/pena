@@ -28,6 +28,14 @@ if (preg_match('~^/category/([\w-]+)$~', $uri, $m) && $method === 'GET') {
   run('CategoryController', 'posts', $m[1]);
 }
 
+/* Search */
+if ($uri === '/search' && $method === 'GET') {
+  run('SearchController', 'search');
+}
+if ($uri === '/search/suggestions' && $method === 'GET') {
+  run('SearchController', 'suggestions');
+}
+
 /* SEO Files */
 if ($uri === '/sitemap.xml' && $method === 'GET') {
   run('SitemapController', 'xml');

@@ -212,32 +212,39 @@ $isAdmin = !empty($_SESSION['is_admin']);
     ?>
 </head>
 <body class="bg-gray-50 font-sans">
-    <div class="max-w-2xl mx-auto px-5 py-8">       
-        
+    <?php include __DIR__ . '/partials/header.php'; ?>
+    
+    <div class="max-w-4xl mx-auto px-4 py-8">       
+        <!-- Breadcrumb -->
         <nav class="mb-8">
-            <div class="flex justify-between items-center">
-                <a href="/" class="text-gray-600 hover:text-gray-800 text-sm transition-colors">← Beranda</a>
-                <?php if ($isAdmin): ?>
-                    <a href="/admin" 
-                       class="text-xs text-gray-500 hover:text-gray-700 transition-colors">
-                        Admin Panel
+            <div class="flex items-center space-x-2 text-sm text-gray-600">
+                <a href="/" class="hover:text-gray-900 transition-colors">Beranda</a>
+                <span>→</span>
+                <?php if (!empty($post['category_name'])): ?>
+                    <a href="/category/<?=htmlspecialchars($post['category_slug'])?>" 
+                       class="hover:text-gray-900 transition-colors">
+                        <?=htmlspecialchars($post['category_name'])?>
                     </a>
+                    <span>→</span>
                 <?php endif; ?>
+                <span class="text-gray-900 font-medium">
+                    <?=htmlspecialchars($post['title'])?>
+                </span>
             </div>
         </nav>
 
-        <article>
+        <article class="bg-white rounded-xl border border-gray-200 p-8">
             <?php if(!empty($post['featured_image'])): ?>
-                <div class="mb-6">
+                <div class="mb-8">
                     <img src="<?=htmlspecialchars($post['featured_image'])?>" 
                          alt="<?=htmlspecialchars($post['title'])?>"
-                         class="w-full h-auto rounded-lg"
+                         class="w-full h-auto rounded-lg shadow-sm"
                          loading="eager"
                          decoding="async">
                 </div>
             <?php endif; ?>
 
-            <h1 class="text-3xl font-bold text-gray-900 mb-4 leading-tight">
+            <h1 class="text-4xl font-bold text-gray-900 mb-6 leading-tight">
                 <?=htmlspecialchars($post['title'])?>
             </h1>
 

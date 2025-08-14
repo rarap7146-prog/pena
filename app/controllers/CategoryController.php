@@ -51,6 +51,44 @@ class CategoryController
         include __DIR__ . '/../../views/admin/categories/index.php';
     }
 
+    public function listAll(): void
+    {
+        // Public category listing (no auth required)
+        $categories = $this->category->all();
+        
+        // Add post count for each category
+        foreach ($categories as &$cat) {
+            $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM posts WHERE category_id = ?');
+            $stmt->execute([$cat['id']]);
+            $cat['post_count'] = (int)$stmt->fetchColumn();
+        }
+        
+        include __DIR__ . '/../../views/categories.php';
+    }
+
+    public function posts(string $slug): void
+    {
+        // Get category by slug
+        $category = $this->category->findBySlug($slug);
+        if (!$category) {
+            http_response_code(404);
+            exit('Kategori tidak ditemukan');
+        }
+
+        // Get posts in this category
+        $stmt = $this->pdo->prepare('
+            SELECT p.*, c.name as category_name, c.slug as category_slug 
+            FROM posts p 
+            LEFT JOIN categories c ON p.category_id = c.id 
+            WHERE p.category_id = ? 
+            ORDER BY p.created_at DESC
+        ');
+        $stmt->execute([$category['id']]);
+        $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        include __DIR__ . '/../../views/category.php';
+    }
+
     public function create(): void
     {
         AuthController::requireAdmin();
