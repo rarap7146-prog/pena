@@ -66,9 +66,18 @@
 <meta name="theme-color" content="#ffffff">
 <meta name="msapplication-TileColor" content="#ffffff">
 
+<!-- Performance & Resource Hints -->
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
+<link rel="dns-prefetch" href="//unpkg.com">
+
+<!-- Preload Critical CSS -->
+<link rel="preload" href="/css/style.css?v=<?= time() ?>" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="/css/style.css?v=<?= time() ?>"></noscript>
+
 <!-- CSS -->
-<link href="/css/style.css?v=<?= time() ?>" rel="stylesheet">
-<link href="/css/dark-mode.css?v=<?= time() ?>" rel="stylesheet">
+<link href="/css/dark-mode.css?v=<?= time() ?>" rel="stylesheet" media="print" onload="this.media='all'">
 
 <!-- PWA Service Worker Registration -->
 <script>
