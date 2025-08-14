@@ -140,13 +140,13 @@
                         <?php if (!empty($categories)): ?>
                             <?php foreach($categories as $category): ?>
                                 <a href="/category/<?=htmlspecialchars($category['slug'])?>" 
-                                   class="inline-flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors">
+                                   class="inline-flex items-center px-3 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-medium hover:bg-gray-300 transition-colors">
                                     <?=htmlspecialchars($category['name'])?>
-                                    <span class="ml-2 text-xs text-gray-500">(<?=$category['post_count']?>)</span>
+                                    <span class="ml-2 text-xs text-gray-600">(<?=$category['post_count']?>)</span>
                                 </a>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <a href="/categories" class="inline-flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors">
+                            <a href="/categories" class="inline-flex items-center px-3 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-medium hover:bg-gray-300 transition-colors">
                                 Lihat Semua Kategori
                             </a>
                         <?php endif; ?>

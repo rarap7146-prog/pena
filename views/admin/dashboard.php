@@ -54,10 +54,10 @@
                 <a href="/admin/post/new" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700">
                     Buat Dokumen Baru
                 </a>
-                <a href="/admin/categories" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200">
+                <a href="/admin/categories" class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md hover:bg-gray-300">
                     Kelola Kategori
                 </a>
-                <a href="/admin/settings" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200">
+                <a href="/admin/settings" class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md hover:bg-gray-300">
                     Pengaturan Site
                 </a>
             </div>
@@ -116,7 +116,7 @@
                     </div>
                     <?php if (count($posts) > 10): ?>
                         <div class="text-center mt-6">
-                            <a href="/admin/posts" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200">
+                            <a href="/admin/posts" class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md hover:bg-gray-300">
                                 Lihat Semua Dokumen
                             </a>
                         </div>

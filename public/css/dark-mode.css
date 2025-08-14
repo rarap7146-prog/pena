@@ -1,4 +1,10 @@
 /* Dark Mode Styles */
+/* Enhanced contrast for buttons and badges */
+[data-theme="dark"] .bg-gray-200 { background-color: rgb(55, 65, 81) !important; }
+[data-theme="dark"] .hover\\:bg-gray-300:hover { background-color: rgb(75, 85, 99) !important; }
+[data-theme="dark"] .text-gray-800 { color: rgb(209, 213, 219) !important; }
+
+/* Existing styles */
 :root {
   /* Light theme colors (default) */
   --bg-primary: #f9fafb;

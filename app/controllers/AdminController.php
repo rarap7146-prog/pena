@@ -266,10 +266,19 @@ class AdminController
         error_log("=== FILE UPLOAD DEBUG END ===");
     }
 
-
-
-    header("Location: /post/{$slug}");
-    exit;
+    // Different redirect behavior based on status
+    if ($status === 'scheduled') {
+        // For scheduled posts, redirect to admin posts index with success message
+        $this->ensureSession();
+        $_SESSION['success'] = "Post berhasil dijadwalkan untuk publikasi pada " . 
+            DateTime::createFromFormat('Y-m-d H:i:s', $scheduledAtForDB)->format('d M Y H:i');
+        header("Location: /admin/posts");
+        exit;
+    } else {
+        // For published or draft posts, redirect to the post page
+        header("Location: /post/{$slug}");
+        exit;
+    }
   }
 
   public function delete(): void {

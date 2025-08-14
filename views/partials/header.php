@@ -62,7 +62,7 @@ $isHomePage = ($_SERVER['REQUEST_URI'] === '/' || $_SERVER['REQUEST_URI'] === '/
             </nav>
 
             <!-- Mobile Menu Button -->
-            <button id="mobileMenuBtn" class="md:hidden text-gray-700 p-2">
+            <button id="mobileMenuBtn" class="md:hidden text-gray-700 p-2" aria-label="Toggle mobile menu" aria-expanded="false">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
@@ -76,7 +76,7 @@ $isHomePage = ($_SERVER['REQUEST_URI'] === '/' || $_SERVER['REQUEST_URI'] === '/
                 <a href="/" class="text-xl font-bold text-gray-900">
                     <?php echo htmlspecialchars($siteSettings['site_name']); ?>
                 </a>
-                <button id="mobileMenuToggle" class="text-gray-700 p-2">
+                <button id="mobileMenuToggle" class="text-gray-700 p-2" aria-label="Toggle mobile menu" aria-expanded="false">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                     </svg>
@@ -140,7 +140,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (mobileMenuToggle && mobileMenu) {
         mobileMenuToggle.addEventListener('click', function() {
+            const isExpanded = mobileMenu.classList.contains('hidden');
             mobileMenu.classList.toggle('hidden');
+            mobileMenuToggle.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
         });
     }
     
