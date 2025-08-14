@@ -105,6 +105,9 @@
                                     Kategori
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Status
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Dibuat
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -136,6 +139,29 @@
                                             </span>
                                         <?php else: ?>
                                             <span class="text-sm text-gray-400">Tanpa kategori</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <?php 
+                                        $status = $post['status'] ?? 'published';
+                                        $statusColors = [
+                                            'published' => 'bg-green-100 text-green-800',
+                                            'draft' => 'bg-gray-100 text-gray-800',
+                                            'scheduled' => 'bg-yellow-100 text-yellow-800'
+                                        ];
+                                        $statusLabels = [
+                                            'published' => 'Terpublikasi',
+                                            'draft' => 'Draft',
+                                            'scheduled' => 'Terjadwal'
+                                        ];
+                                        ?>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $statusColors[$status] ?? $statusColors['published'] ?>">
+                                            <?= $statusLabels[$status] ?? 'Terpublikasi' ?>
+                                        </span>
+                                        <?php if ($status === 'scheduled' && !empty($post['scheduled_at'])): ?>
+                                            <div class="text-xs text-gray-500 mt-1">
+                                                <?= date('j M Y, H:i', strtotime($post['scheduled_at'])) ?>
+                                            </div>
                                         <?php endif; ?>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">

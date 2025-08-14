@@ -56,9 +56,14 @@ class CategoryController
         // Public category listing (no auth required)
         $categories = $this->category->all();
         
-        // Add post count for each category
+        // Add post count for each category (only published and ready scheduled posts)
         foreach ($categories as &$cat) {
-            $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM posts WHERE category_id = ?');
+            $stmt = $this->pdo->prepare('
+                SELECT COUNT(*) FROM posts 
+                WHERE category_id = ? 
+                AND (status = "published" 
+                     OR (status = "scheduled" AND scheduled_at <= NOW()))
+            ');
             $stmt->execute([$cat['id']]);
             $cat['post_count'] = (int)$stmt->fetchColumn();
         }
@@ -75,12 +80,14 @@ class CategoryController
             show404();
         }
 
-        // Get posts in this category
+        // Get posts in this category (only published and ready scheduled posts)
         $stmt = $this->pdo->prepare('
             SELECT p.*, c.name as category_name, c.slug as category_slug 
             FROM posts p 
             LEFT JOIN categories c ON p.category_id = c.id 
             WHERE p.category_id = ? 
+            AND (p.status = "published" 
+                 OR (p.status = "scheduled" AND p.scheduled_at <= NOW()))
             ORDER BY p.created_at DESC
         ');
         $stmt->execute([$category['id']]);

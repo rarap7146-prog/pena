@@ -1,0 +1,55 @@
+{
+  "name": "Araska.id - Template & Contoh Dokumen",
+  "short_name": "Araska.id",
+  "description": "Template dan contoh dokumen berkualitas tinggi untuk pelajar dan profesional",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "id",
+  "categories": ["education", "productivity", "business"],
+  "icons": [
+    {
+      "src": "/uploads/favicons/favicon_1755139081.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/uploads/favicons/favicon_1755139081.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Cari Dokumen",
+      "short_name": "Search",
+      "description": "Cari template dan dokumen",
+      "url": "/search",
+      "icons": [
+        {
+          "src": "/uploads/favicons/favicon_1755139081.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Kategori",
+      "short_name": "Categories",
+      "description": "Jelajahi semua kategori",
+      "url": "/categories",
+      "icons": [
+        {
+          "src": "/uploads/favicons/favicon_1755139081.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

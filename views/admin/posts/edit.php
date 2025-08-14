@@ -169,6 +169,33 @@
                             </div>
                         </div>
 
+                        <!-- Publishing Schedule -->
+                        <div class="border-t pt-6">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Publikasi</h3>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                                    <select id="status" name="status" 
+                                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="published" <?= ($post['status'] ?? 'published') === 'published' ? 'selected' : '' ?>>Publikasikan Sekarang</option>
+                                        <option value="draft" <?= ($post['status'] ?? 'published') === 'draft' ? 'selected' : '' ?>>Simpan sebagai Draft</option>
+                                        <option value="scheduled" <?= ($post['status'] ?? 'published') === 'scheduled' ? 'selected' : '' ?>>Jadwalkan Publikasi</option>
+                                    </select>
+                                </div>
+
+                                <div id="scheduled_fields" style="display: <?= ($post['status'] ?? 'published') === 'scheduled' ? 'block' : 'none' ?>;">
+                                    <label for="scheduled_at" class="block text-sm font-medium text-gray-700">Tanggal & Waktu Publikasi</label>
+                                    <input type="datetime-local" id="scheduled_at" name="scheduled_at"
+                                           value="<?= isset($post['scheduled_at']) && $post['scheduled_at'] ? date('Y-m-d\TH:i', strtotime($post['scheduled_at'])) : '' ?>"
+                                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <div class="mt-1 text-sm text-gray-500">
+                                        Artikel akan dipublikasikan secara otomatis pada waktu yang ditentukan
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="flex justify-end">
                             <button type="submit" 
                                     class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out">
@@ -230,6 +257,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const excerptCount = document.getElementById('excerptCount');
     const form = document.getElementById('postForm');
     const file = document.getElementById('file');
+    
+    // Scheduling elements
+    const statusSelect = document.getElementById('status');
+    const scheduledFields = document.getElementById('scheduled_fields');
+    const scheduledAtInput = document.getElementById('scheduled_at');
     
     // Category modal elements
     const showCategoryForm = document.getElementById('showCategoryForm');
@@ -435,6 +467,41 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         // normalize slug just before submit
         slug.value = toSlug(slug.value || title.value);
+        
+        // Validate scheduling
+        if (statusSelect.value === 'scheduled') {
+            const scheduledAt = scheduledAtInput.value;
+            if (!scheduledAt) {
+                e.preventDefault();
+                alert('Tanggal dan waktu publikasi harus diisi untuk artikel terjadwal.');
+                return;
+            }
+            
+            const scheduledDate = new Date(scheduledAt);
+            const now = new Date();
+            if (scheduledDate <= now) {
+                e.preventDefault();
+                alert('Tanggal publikasi harus di masa depan.');
+                return;
+            }
+        }
+    });
+
+    // Status change handler
+    statusSelect.addEventListener('change', function() {
+        if (this.value === 'scheduled') {
+            scheduledFields.style.display = 'block';
+            
+            // Set minimum datetime to now
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            scheduledAtInput.min = now.toISOString().slice(0, 16);
+        } else {
+            scheduledFields.style.display = 'none';
+            if (this.value !== 'scheduled') {
+                scheduledAtInput.value = '';
+            }
+        }
     });
 
     // Featured image preview

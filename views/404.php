@@ -115,13 +115,15 @@
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Kategori Populer</h3>
                     <?php 
-                    // Get top categories
+                    // Get top categories (count only published posts)
                     try {
                         $pdo = require __DIR__ . '/../app/db.php';
                         $categoriesStmt = $pdo->prepare("
                             SELECT c.name, c.slug, COUNT(p.id) as post_count 
                             FROM categories c 
                             LEFT JOIN posts p ON c.id = p.category_id
+                                AND (p.status = 'published' 
+                                     OR (p.status = 'scheduled' AND p.scheduled_at <= NOW()))
                             GROUP BY c.id 
                             HAVING post_count > 0
                             ORDER BY post_count DESC 
@@ -155,12 +157,14 @@
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Dokumen Terbaru</h3>
                     <?php 
-                    // Get recent posts
+                    // Get recent posts (only published and ready scheduled)
                     try {
                         $recentPostsStmt = $pdo->prepare("
                             SELECT p.title, p.slug, c.name as category_name 
                             FROM posts p 
                             LEFT JOIN categories c ON p.category_id = c.id
+                            WHERE (p.status = 'published' 
+                                   OR (p.status = 'scheduled' AND p.scheduled_at <= NOW()))
                             ORDER BY p.created_at DESC 
                             LIMIT 4
                         ");

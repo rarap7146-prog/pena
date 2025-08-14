@@ -16,6 +16,19 @@ class Post
             "SELECT p.*, c.name as category_name 
              FROM posts p 
              LEFT JOIN categories c ON p.category_id = c.id 
+             WHERE p.status = 'published' 
+             OR (p.status = 'scheduled' AND p.scheduled_at <= NOW())
+             ORDER BY p.created_at DESC"
+        )->fetchAll();
+    }
+
+    // Get all posts for admin (including drafts and scheduled)
+    public function allForAdmin(): array
+    {
+        return $this->pdo->query(
+            "SELECT p.*, c.name as category_name 
+             FROM posts p 
+             LEFT JOIN categories c ON p.category_id = c.id 
              ORDER BY p.created_at DESC"
         )->fetchAll();
     }
@@ -40,6 +53,8 @@ class Post
              FROM posts p 
              LEFT JOIN categories c ON p.category_id = c.id 
              WHERE p.slug = ? 
+             AND (p.status = 'published' 
+                  OR (p.status = 'scheduled' AND p.scheduled_at <= NOW()))
              LIMIT 1"
         );
         $stmt->execute([$slug]);
@@ -52,8 +67,8 @@ class Post
             "INSERT INTO posts (
                 title, meta_title, slug, excerpt, 
                 meta_description, content_md, featured_image, 
-                category_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                category_id, status, scheduled_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
         
         $stmt->execute([
@@ -64,7 +79,9 @@ class Post
             $data['meta_description'] ?? $data['excerpt'] ?? null,
             $data['content_md'],
             $data['featured_image'] ?? null,
-            $data['category_id'] ?? null
+            $data['category_id'] ?? null,
+            $data['status'] ?? 'published',
+            $data['scheduled_at'] ?? null
         ]);
         
         return (int)$this->pdo->lastInsertId();
@@ -77,7 +94,8 @@ class Post
                 title = ?, meta_title = ?, slug = ?, 
                 excerpt = ?, meta_description = ?, 
                 content_md = ?, featured_image = ?, 
-                category_id = ?
+                category_id = ?, status = ?, scheduled_at = ?,
+                updated_at = NOW()
              WHERE id = ?"
         );
         
@@ -90,6 +108,8 @@ class Post
             $data['content_md'],
             $data['featured_image'] ?? null,
             $data['category_id'] ?? null,
+            $data['status'] ?? 'published',
+            $data['scheduled_at'] ?? null,
             $id
         ]);
     }
@@ -98,6 +118,44 @@ class Post
     {
         $stmt = $this->pdo->prepare("DELETE FROM posts WHERE id = ?");
         return $stmt->execute([$id]);
+    }
+
+    // Get scheduled posts that are ready to be published
+    public function getScheduledPostsReady(): array
+    {
+        return $this->pdo->query(
+            "SELECT * FROM posts 
+             WHERE status = 'scheduled' 
+             AND scheduled_at <= NOW() 
+             ORDER BY scheduled_at ASC"
+        )->fetchAll();
+    }
+
+    // Publish scheduled posts
+    public function publishScheduledPosts(): int
+    {
+        $stmt = $this->pdo->prepare(
+            "UPDATE posts 
+             SET status = 'published' 
+             WHERE status = 'scheduled' 
+             AND scheduled_at <= NOW()"
+        );
+        $stmt->execute();
+        return $stmt->rowCount();
+    }
+
+    // Get posts by status
+    public function getByStatus(string $status): array
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT p.*, c.name as category_name 
+             FROM posts p 
+             LEFT JOIN categories c ON p.category_id = c.id 
+             WHERE p.status = ? 
+             ORDER BY p.created_at DESC"
+        );
+        $stmt->execute([$status]);
+        return $stmt->fetchAll();
     }
 
     private function createSlug(string $title): string

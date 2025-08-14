@@ -100,6 +100,8 @@ class AdminController
     $metaDescription = trim($_POST['meta_description'] ?? $excerpt);
     $content         = trim($_POST['content_md'] ?? '');
     $categoryId      = !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null;
+    $status          = trim($_POST['status'] ?? 'published');
+    $scheduledAt     = trim($_POST['scheduled_at'] ?? '');
 
     // Validation
     if (empty($title)) {
@@ -109,6 +111,33 @@ class AdminController
     if (empty($content)) {
       http_response_code(400);
       exit('Content is required');
+    }
+
+    // Validate status
+    if (!in_array($status, ['draft', 'published', 'scheduled'])) {
+      $status = 'published';
+    }
+
+    // Validate scheduled_at if status is scheduled
+    $scheduledAtForDB = null;
+    if ($status === 'scheduled') {
+      if (empty($scheduledAt)) {
+        http_response_code(400);
+        exit('Scheduled date is required for scheduled posts');
+      }
+      
+      $scheduledDateTime = DateTime::createFromFormat('Y-m-d\TH:i', $scheduledAt);
+      if (!$scheduledDateTime) {
+        http_response_code(400);
+        exit('Invalid scheduled date format');
+      }
+      
+      if ($scheduledDateTime <= new DateTime()) {
+        http_response_code(400);
+        exit('Scheduled date must be in the future');
+      }
+      
+      $scheduledAtForDB = $scheduledDateTime->format('Y-m-d H:i:s');
     }
 
     // Validate category exists if provided
@@ -169,12 +198,12 @@ class AdminController
     $stmt = $pdo->prepare(
       "INSERT INTO posts (
         title, meta_title, slug, excerpt, meta_description, 
-        content_md, featured_image, category_id, created_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())"
+        content_md, featured_image, category_id, status, scheduled_at, created_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())"
     );
     $stmt->execute([
         $title, $metaTitle, $slug, $excerpt, $metaDescription,
-        $content, $featuredImage, $categoryId
+        $content, $featuredImage, $categoryId, $status, $scheduledAtForDB
     ]);
     $postId = (int)$pdo->lastInsertId();
 
@@ -303,9 +332,9 @@ class AdminController
     AuthController::requireAdmin();
     $pdo = require __DIR__ . '/../db.php';
     
-    // Get posts with category info
+    // Get posts with category info and scheduling data
     $posts = $pdo->query(
-      "SELECT p.id, p.title, p.slug, p.created_at, p.excerpt, c.name as category_name
+      "SELECT p.id, p.title, p.slug, p.created_at, p.excerpt, p.status, p.scheduled_at, c.name as category_name
        FROM posts p 
        LEFT JOIN categories c ON p.category_id = c.id 
        ORDER BY p.created_at DESC"
@@ -539,11 +568,40 @@ class AdminController
     $category_id = !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null;
     $meta_title = trim($_POST['meta_title'] ?? '');
     $meta_description = trim($_POST['meta_description'] ?? '');
+    $status = trim($_POST['status'] ?? 'published');
+    $scheduledAt = trim($_POST['scheduled_at'] ?? '');
 
     // Validate required fields
     if (empty($title) || empty($content_md)) {
       http_response_code(400);
       exit('Title and content are required');
+    }
+
+    // Validate status
+    if (!in_array($status, ['draft', 'published', 'scheduled'])) {
+      $status = 'published';
+    }
+
+    // Validate scheduled_at if status is scheduled
+    $scheduledAtForDB = null;
+    if ($status === 'scheduled') {
+      if (empty($scheduledAt)) {
+        http_response_code(400);
+        exit('Scheduled date is required for scheduled posts');
+      }
+      
+      $scheduledDateTime = DateTime::createFromFormat('Y-m-d\TH:i', $scheduledAt);
+      if (!$scheduledDateTime) {
+        http_response_code(400);
+        exit('Invalid scheduled date format');
+      }
+      
+      if ($scheduledDateTime <= new DateTime()) {
+        http_response_code(400);
+        exit('Scheduled date must be in the future');
+      }
+      
+      $scheduledAtForDB = $scheduledDateTime->format('Y-m-d H:i:s');
     }
 
     // Validate category exists if provided
@@ -698,13 +756,13 @@ class AdminController
     $stmt = $pdo->prepare('
       UPDATE posts 
       SET title = ?, slug = ?, content_md = ?, excerpt = ?, category_id = ?, 
-          featured_image = ?, meta_title = ?, meta_description = ?, updated_at = CURRENT_TIMESTAMP
+          featured_image = ?, meta_title = ?, meta_description = ?, status = ?, scheduled_at = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     ');
 
     if ($stmt->execute([
       $title, $slug, $content_md, $excerpt, $category_id,
-      $featured_image, $meta_title, $meta_description, $id
+      $featured_image, $meta_title, $meta_description, $status, $scheduledAtForDB, $id
     ])) {
       $_SESSION['success'] = 'Post berhasil diperbarui';
       header('Location: /admin/posts');

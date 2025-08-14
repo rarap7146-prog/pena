@@ -55,7 +55,7 @@ class SearchController
         $offset = ($page - 1) * $perPage;
         $searchTerm = '%' . $query . '%';
         
-        // Simplified query for initial implementation
+        // Search only published and ready scheduled posts
         $stmt = $this->pdo->prepare("
             SELECT p.*, c.name as category_name, c.slug as category_slug
             FROM posts p
@@ -65,6 +65,8 @@ class SearchController
                 p.content_md LIKE ? OR 
                 p.excerpt LIKE ?
             )
+            AND (p.status = 'published' 
+                 OR (p.status = 'scheduled' AND p.scheduled_at <= NOW()))
             ORDER BY p.created_at DESC
             LIMIT $perPage OFFSET $offset
         ");
@@ -88,6 +90,8 @@ class SearchController
                 p.content_md LIKE ? OR 
                 p.excerpt LIKE ?
             )
+            AND (p.status = 'published' 
+                 OR (p.status = 'scheduled' AND p.scheduled_at <= NOW()))
         ");
         
         $stmt->execute([$searchTerm, $searchTerm, $searchTerm]);
@@ -113,6 +117,8 @@ class SearchController
             SELECT DISTINCT title
             FROM posts 
             WHERE title LIKE ?
+            AND (status = 'published' 
+                 OR (status = 'scheduled' AND scheduled_at <= NOW()))
             ORDER BY title
             LIMIT 5
         ");
