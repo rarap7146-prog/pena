@@ -33,26 +33,29 @@ function getCanonicalUrl($path = '') {
 function generateMetaTags($title = '', $description = '', $path = '', $image = '') {
     $siteSettings = getSiteSettings();
     $canonical = getCanonicalUrl($path);
-    
+
     $title = $title ?: $siteSettings['site_name'];
     $description = $description ?: $siteSettings['site_description'];
     $image = $image ?: '/favicon.ico';
-    
+
     if (!str_starts_with($image, 'http')) {
         $image = getCanonicalUrl($image);
     }
-    
+
     return [
+        // Basic
         'title' => $title,
         'description' => $description,
-        'canonical' => $canonical,
-        'og_title' => $title,
-        'og_description' => $description,
+        'canonical_url' => $canonical,
+        'keywords' => $siteSettings['site_keywords'] ?? '',
+        // Open Graph
+        'og_type' => 'website',
         'og_image' => $image,
         'og_url' => $canonical,
-        'twitter_title' => $title,
-        'twitter_description' => $description,
-        'twitter_image' => $image
+        // Twitter
+        'twitter_image' => $image,
+        // Robots
+        'robots' => 'index, follow'
     ];
 }
 ?>

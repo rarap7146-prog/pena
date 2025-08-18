@@ -12,8 +12,16 @@ function run($ctrl, $method, ...$args) {
 }
 
 /* Public pages */
+
+// Homepage (page 1)
 if ($uri === '/' && $method === 'GET') {
-  run('PostController', 'index');
+  run('PostController', 'index', 1);
+}
+
+// Pretty pagination: /page/2, /page/3, etc.
+if (preg_match('~^/page/(\d+)$~', $uri, $m) && $method === 'GET') {
+  $page = max(1, (int)$m[1]);
+  run('PostController', 'index', $page);
 }
 
 if (preg_match('~^/post/([\w-]+)$~', $uri, $m) && $method === 'GET') {
@@ -26,6 +34,12 @@ if ($uri === '/categories' && $method === 'GET') {
 
 if (preg_match('~^/category/([\w-]+)$~', $uri, $m) && $method === 'GET') {
   run('CategoryController', 'posts', $m[1]);
+}
+
+// Pretty category pagination: /category/{slug}/page/2
+if (preg_match('~^/category/([\w-]+)/page/(\d+)$~', $uri, $m) && $method === 'GET') {
+  $page = max(1, (int)$m[2]);
+  run('CategoryController', 'posts', $m[1], $page);
 }
 
 /* Search */

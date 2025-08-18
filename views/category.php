@@ -105,6 +105,56 @@
                     </article>
                 <?php endforeach; ?>
             </div>
+            <?php if (!empty($pagination) && $pagination['total'] > 1): ?>
+            <nav class="flex justify-center mt-12" aria-label="Category pagination">
+                <div class="bg-white px-3 py-2 rounded-md shadow-sm">
+                    <ul class="inline-flex items-center space-x-2 text-sm">
+                        <?php if ($pagination['hasPrev']): ?>
+                            <li>
+                                <a href="<?= htmlspecialchars($pagination['prevUrl']) ?>" class="px-3 py-1.5 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition" rel="prev">&laquo; Prev</a>
+                            </li>
+                        <?php endif; ?>
+
+                        <?php
+                        $total = $pagination['total'];
+                        $current = $pagination['current'];
+                        $pages = [];
+                        if ($total <= 9) {
+                            for ($i = 1; $i <= $total; $i++) $pages[] = $i;
+                        } else {
+                            $pages[] = 1;
+                            $left = max(2, $current - 2);
+                            $right = min($total - 1, $current + 2);
+                            if ($left > 2) $pages[] = '...';
+                            for ($i = $left; $i <= $right; $i++) $pages[] = $i;
+                            if ($right < $total - 1) $pages[] = '...';
+                            $pages[] = $total;
+                        }
+                        foreach ($pages as $p):
+                            if ($p === '...'):
+                        ?>
+                            <li class="px-2 text-gray-400 select-none">&hellip;</li>
+                        <?php else: ?>
+                            <?php $isCurrent = $p == $current; ?>
+                            <li>
+                                <?php
+                                    $pageUrl = $p == 1 ? htmlspecialchars($pagination['canonicalUrl']) : htmlspecialchars(rtrim($pagination['canonicalUrl'], '/')) . '/page/' . $p;
+                                ?>
+                                <a href="<?= $pageUrl ?>" class="px-3 py-1.5 border <?= $isCurrent ? 'bg-blue-500 text-white font-semibold border-blue-500' : 'bg-white text-gray-700 border-gray-200 hover:bg-blue-50 hover:text-blue-600' ?> rounded-md transition" <?= $isCurrent ? 'aria-current="page"' : '' ?>>
+                                    <?= $p ?>
+                                </a>
+                            </li>
+                        <?php endif; endforeach; ?>
+
+                        <?php if ($pagination['hasNext']): ?>
+                            <li>
+                                <a href="<?= htmlspecialchars($pagination['nextUrl']) ?>" class="px-3 py-1.5 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition" rel="next">Next &raquo;</a>
+                            </li>
+                        <?php endif; ?>
+                    </ul>
+                </div>
+            </nav>
+            <?php endif; ?>
         <?php else: ?>
             <div class="bg-white rounded-xl border border-gray-200 p-12 text-center">
                 <div class="text-gray-400 mb-6">

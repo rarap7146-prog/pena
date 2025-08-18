@@ -71,7 +71,7 @@ class CategoryController
         include __DIR__ . '/../../views/categories.php';
     }
 
-    public function posts(string $slug): void
+    public function posts(string $slug, int $page = 1): void
     {
         // Get category by slug
         $category = $this->category->findBySlug($slug);
@@ -80,18 +80,63 @@ class CategoryController
             show404();
         }
 
-        // Get posts in this category (only published and ready scheduled posts)
-        $stmt = $this->pdo->prepare('
-            SELECT p.*, c.name as category_name, c.slug as category_slug 
-            FROM posts p 
-            LEFT JOIN categories c ON p.category_id = c.id 
-            WHERE p.category_id = ? 
-            AND (p.status = "published" 
-                 OR (p.status = "scheduled" AND p.scheduled_at <= NOW()))
-            ORDER BY p.created_at DESC
+        // Pagination settings
+        $perPage = 10;
+        // Allow page override from query param if provided
+        if (!empty($_GET['page']) && is_numeric($_GET['page'])) {
+            $page = max(1, (int)$_GET['page']);
+        }
+        $page = max(1, (int)$page);
+        $offset = ($page - 1) * $perPage;
+
+        // Get total count for this category (only published and ready scheduled posts)
+        $countStmt = $this->pdo->prepare('
+            SELECT COUNT(*) FROM posts p
+            WHERE p.category_id = ?
+            AND (p.status = "published" OR (p.status = "scheduled" AND p.scheduled_at <= NOW()))
         ');
-        $stmt->execute([$category['id']]);
+        $countStmt->execute([$category['id']]);
+        $total = (int)$countStmt->fetchColumn();
+        $totalPages = $total > 0 ? (int)ceil($total / $perPage) : 1;
+
+        // Get posts in this category (paginated)
+        // Use named parameters only (mixing named and positional is not supported)
+        $stmt = $this->pdo->prepare(
+            'SELECT p.*, c.name as category_name, c.slug as category_slug 
+             FROM posts p 
+             LEFT JOIN categories c ON p.category_id = c.id 
+             WHERE p.category_id = :category_id 
+             AND (p.status = "published" OR (p.status = "scheduled" AND p.scheduled_at <= NOW()))
+             ORDER BY p.created_at DESC
+             LIMIT :limit OFFSET :offset'
+        );
+        $stmt->bindValue(':category_id', $category['id'], \PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $perPage, \PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+        $stmt->execute();
         $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Prepare pagination URLs
+        $config = require __DIR__ . '/../../config/app.php';
+        $baseUrl = $config['base_url'] ?? 'https://araska.id';
+        $canonicalBase = rtrim($baseUrl, '/') . '/category/' . $category['slug'];
+        // Pretty URLs: /category/{slug}/page/{n}
+        $canonicalUrl = $page > 1 ? $canonicalBase . '/page/' . $page : $canonicalBase;
+        $prevUrl = null;
+        if ($page > 1) {
+            $prevUrl = $page === 2 ? $canonicalBase : $canonicalBase . '/page/' . ($page - 1);
+        }
+        $nextUrl = $page < $totalPages ? $canonicalBase . '/page/' . ($page + 1) : null;
+
+        $pagination = [
+            'current' => $page,
+            'total' => $totalPages,
+            'hasPrev' => $page > 1,
+            'hasNext' => $page < $totalPages,
+            'canonicalUrl' => $canonicalUrl,
+            'prevUrl' => $prevUrl,
+            'nextUrl' => $nextUrl,
+        ];
 
         include __DIR__ . '/../../views/category.php';
     }

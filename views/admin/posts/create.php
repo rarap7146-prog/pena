@@ -135,7 +135,7 @@
 
                         <div>
                             <label for="file" class="block text-sm font-medium text-gray-700">Upload file asli (PDF/DOCX, opsional, maks 5MB)</label>
-                            <input id="file" type="file" name="file" accept=".pdf,.docx"
+                            <input id="file" type="file" name="file" accept=".pdf,.doc,.docx,.xls,.xlsx"
                                    class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                             <div class="mt-1 text-sm text-gray-500">
                                 <span id="fileHint">(.pdf, .docx — ≤ 5MB)</span>
@@ -430,11 +430,11 @@ document.addEventListener('DOMContentLoaded', function() {
     form.addEventListener('submit', (e) => {
         const f = file.files && file.files[0];
         if (f) {
-            const okExt = /\.(pdf|docx)$/i.test(f.name);
+            const okExt = /\.(pdf|doc|docx|xls|xlsx)$/i.test(f.name);
             const okSize = f.size <= 5 * 1024 * 1024; // 5MB
             if (!okExt) {
                 e.preventDefault();
-                alert('Tipe file tidak diizinkan. Hanya PDF atau DOCX.');
+                alert('Tipe file tidak diizinkan. Hanya PDF, DOC, DOCX, XLS, atau XLSX.');
                 return;
             }
             if (!okSize) {

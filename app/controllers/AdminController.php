@@ -223,13 +223,31 @@ class AdminController
             error_log("Detected MIME: {$mime}");
             error_log("Detected EXT: {$ext}");
 
-            $allowedPdfMimes  = ['application/pdf', 'application/octet-stream', 'binary/octet-stream', 'application/x-pdf'];
-            $allowedDocxMimes = ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip'];
+      $allowedPdfMimes  = ['application/pdf', 'application/octet-stream', 'binary/octet-stream', 'application/x-pdf'];
+      $allowedDocMimes = [
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-word.document.macroEnabled.12',
+        'application/vnd.ms-word',
+        'application/zip',
+        'application/x-zip-compressed'
+      ];
+      $allowedXlsMimes = [
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel.sheet.macroEnabled.12',
+        'application/vnd.ms-excel.sheet.binary.macroEnabled.12',
+        'application/vnd.ms-excel.template.macroEnabled.12',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.template',
+        'application/zip',
+        'application/x-zip-compressed'
+      ];
 
-            $isPdf  = ($ext === 'pdf')  && in_array($mime, $allowedPdfMimes, true);
-            $isDocx = ($ext === 'docx') && in_array($mime, $allowedDocxMimes, true);
+      $isPdf  = ($ext === 'pdf')  && in_array($mime, $allowedPdfMimes, true);
+      $isDoc  = (in_array($ext, ['doc', 'docx'])) && in_array($mime, $allowedDocMimes, true);
+      $isXls  = (in_array($ext, ['xls', 'xlsx'])) && in_array($mime, $allowedXlsMimes, true);
 
-            if ($isPdf || $isDocx) {
+      if ($isPdf || $isDoc || $isXls) {
                 $cfg = require __DIR__ . '/../../config/app.php';
                 $uploadsDir = rtrim($cfg['uploads_dir'] ?? '', '/');
                 error_log("Uploads dir: {$uploadsDir}");
@@ -710,18 +728,33 @@ class AdminController
         $mime = finfo_file($finfo, $tmp);
         finfo_close($finfo);
         
-        // Check allowed file types
-        $allowedMimes = [
-            'application/pdf',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
-            'application/msword', // .doc
-            'text/plain'
-        ];
-        
-        $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-        $allowedExts = ['pdf', 'docx', 'doc', 'txt'];
-        
-        if (in_array($mime, $allowedMimes) && in_array($ext, $allowedExts)) {
+    // Check allowed file types
+    $allowedPdfMimes  = ['application/pdf', 'application/octet-stream', 'binary/octet-stream', 'application/x-pdf'];
+    $allowedDocMimes = [
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-word.document.macroEnabled.12',
+      'application/vnd.ms-word',
+      'application/zip',
+      'application/x-zip-compressed'
+    ];
+    $allowedXlsMimes = [
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel.sheet.macroEnabled.12',
+      'application/vnd.ms-excel.sheet.binary.macroEnabled.12',
+      'application/vnd.ms-excel.template.macroEnabled.12',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.template',
+      'application/zip',
+      'application/x-zip-compressed'
+    ];
+
+    $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+    $isPdf  = ($ext === 'pdf')  && in_array($mime, $allowedPdfMimes, true);
+    $isDoc  = (in_array($ext, ['doc', 'docx'])) && in_array($mime, $allowedDocMimes, true);
+    $isXls  = (in_array($ext, ['xls', 'xlsx'])) && in_array($mime, $allowedXlsMimes, true);
+
+    if ($isPdf || $isDoc || $isXls) {
             $uploadsDir = __DIR__ . '/../../storage/uploads';
             
             if (!is_dir($uploadsDir)) {

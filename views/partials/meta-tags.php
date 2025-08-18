@@ -1,8 +1,8 @@
 <!-- Site Title -->
-<title><?= htmlspecialchars($meta['title']) ?></title>
+<title><?= htmlspecialchars($meta['title'] ?? '') ?></title>
 
 <!-- Meta Description -->
-<meta name="description" content="<?= htmlspecialchars($meta['description']) ?>">
+<meta name="description" content="<?= htmlspecialchars($meta['description'] ?? '') ?>">
 
 <!-- Meta Keywords (if available) -->
 <?php if (!empty($meta['keywords'])): ?>
@@ -28,20 +28,20 @@
 <!-- Open Graph Meta Tags -->
 <meta property="og:title" content="<?= htmlspecialchars($meta['title']) ?>">
 <meta property="og:description" content="<?= htmlspecialchars($meta['description']) ?>">
-<meta property="og:url" content="<?= htmlspecialchars($meta['canonical_url']) ?>">
+<meta property="og:url" content="<?= htmlspecialchars($pagination['canonicalUrl'] ?? $meta['canonical_url'] ?? '') ?>">
 <meta property="og:type" content="<?= htmlspecialchars($meta['og_type'] ?? 'website') ?>">
 <meta property="og:site_name" content="<?= htmlspecialchars($siteSettings['site_name']) ?>">
 
 <!-- Open Graph Image (if available) -->
 <?php if (!empty($meta['og_image'])): ?>
 <meta property="og:image" content="<?= htmlspecialchars($meta['og_image']) ?>">
-<meta property="og:image:alt" content="<?= htmlspecialchars($meta['title']) ?>">
+<meta property="og:image:alt" content="<?= htmlspecialchars($meta['title'] ?? '') ?>">
 <?php endif; ?>
 
 <!-- Twitter Card Meta Tags -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="<?= htmlspecialchars($meta['title']) ?>">
-<meta name="twitter:description" content="<?= htmlspecialchars($meta['description']) ?>">
+<meta name="twitter:title" content="<?= htmlspecialchars($meta['title'] ?? '') ?>">
+<meta name="twitter:description" content="<?= htmlspecialchars($meta['description'] ?? '') ?>">
 
 <!-- Twitter Image (if available) -->
 <?php if (!empty($meta['twitter_image'])): ?>
@@ -49,10 +49,20 @@
 <?php endif; ?>
 
 <!-- Canonical URL -->
-<link rel="canonical" href="<?= htmlspecialchars($meta['canonical_url']) ?>">
+<?php $canonical = $pagination['canonicalUrl'] ?? $meta['canonical_url'] ?? ''; ?>
+<link rel="canonical" href="<?= htmlspecialchars($canonical) ?>">
+
+<!-- Prev/Next (pagination-aware) -->
+<?php if (!empty($pagination['prevUrl'])): ?>
+  <link rel="prev" href="<?= htmlspecialchars($pagination['prevUrl']) ?>">
+<?php endif; ?>
+<?php if (!empty($pagination['nextUrl'])): ?>
+  <link rel="next" href="<?= htmlspecialchars($pagination['nextUrl']) ?>">
+<?php endif; ?>
 
 <!-- Robots Meta -->
-<meta name="robots" content="<?= htmlspecialchars($meta['robots'] ?? 'index, follow') ?>">
+<?php $robots = $pagination['current'] > 1 ? 'noindex,follow' : ($meta['robots'] ?? 'index, follow'); ?>
+<meta name="robots" content="<?= htmlspecialchars($robots) ?>">
 
 <!-- Language and Locale -->
 <meta property="og:locale" content="id_ID">

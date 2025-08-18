@@ -99,42 +99,49 @@
 
             <!-- Pagination -->
             <?php if ($searchData['totalPages'] > 1): ?>
-                <div class="mt-12">
-                    <nav class="flex justify-center">
-                        <div class="flex space-x-2">
+                <nav class="flex justify-center mt-12" aria-label="Search pagination">
+                    <div class="bg-white px-3 py-2 rounded-md shadow-sm">
+                        <ul class="inline-flex items-center space-x-2 text-sm">
                             <?php if ($searchData['currentPage'] > 1): ?>
-                                <a href="/search?q=<?=urlencode($searchData['query'])?>&page=<?=($searchData['currentPage'] - 1)?>" 
-                                   class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
-                                    ← Sebelumnya
-                                </a>
+                                <li>
+                                    <a href="/search?q=<?=urlencode($searchData['query'])?>&page=<?=($searchData['currentPage'] - 1)?>" class="px-3 py-1.5 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition">&laquo; Sebelumnya</a>
+                                </li>
                             <?php endif; ?>
 
-                            <?php 
-                            $startPage = max(1, $searchData['currentPage'] - 2);
-                            $endPage = min($searchData['totalPages'], $searchData['currentPage'] + 2);
-                            
-                            for ($i = $startPage; $i <= $endPage; $i++): ?>
-                                <?php if ($i == $searchData['currentPage']): ?>
-                                    <span class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium">
-                                        <?=$i?>
-                                    </span>
-                                <?php else: ?>
-                                    <a href="/search?q=<?=urlencode($searchData['query'])?>&page=<?=$i?>" 
-                                       class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
-                                        <?=$i?>
-                                    </a>
-                                <?php endif; ?>
-                            <?php endfor; ?>
+                            <?php
+                            $total = $searchData['totalPages'];
+                            $current = $searchData['currentPage'];
+                            $pages = [];
+                            if ($total <= 9) {
+                                for ($i = 1; $i <= $total; $i++) $pages[] = $i;
+                            } else {
+                                $pages[] = 1;
+                                $left = max(2, $current - 2);
+                                $right = min($total - 1, $current + 2);
+                                if ($left > 2) $pages[] = '...';
+                                for ($i = $left; $i <= $right; $i++) $pages[] = $i;
+                                if ($right < $total - 1) $pages[] = '...';
+                                $pages[] = $total;
+                            }
+                            foreach ($pages as $p):
+                                if ($p === '...'):
+                            ?>
+                                <li class="px-2 text-gray-400 select-none">&hellip;</li>
+                            <?php else: ?>
+                                <?php $isCurrent = $p == $current; ?>
+                                <li>
+                                    <a href="/search?q=<?=urlencode($searchData['query'])?>&page=<?=$p?>" class="px-3 py-1.5 border <?= $isCurrent ? 'bg-blue-500 text-white font-semibold border-blue-500' : 'bg-white text-gray-700 border-gray-200 hover:bg-blue-50 hover:text-blue-600' ?> rounded-md transition" <?= $isCurrent ? 'aria-current="page"' : '' ?>><?=$p?></a>
+                                </li>
+                            <?php endif; endforeach; ?>
 
                             <?php if ($searchData['currentPage'] < $searchData['totalPages']): ?>
-                                <a href="/search?q=<?=urlencode($searchData['query'])?>&page=<?=($searchData['currentPage'] + 1)?>" 
-                                   class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
-                                    Selanjutnya →
-                                </a>
+                                <li>
+                                    <a href="/search?q=<?=urlencode($searchData['query'])?>&page=<?=($searchData['currentPage'] + 1)?>" class="px-3 py-1.5 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition">Selanjutnya &raquo;</a>
+                                </li>
                             <?php endif; ?>
-                        </div>
-                    </nav>
-                </div>
+                        </ul>
+                    </div>
+                </nav>
             <?php endif; ?>
 
         <?php else: ?>
